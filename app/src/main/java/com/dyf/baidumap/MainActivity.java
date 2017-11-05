@@ -13,9 +13,12 @@ import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.model.LatLng;
 
@@ -33,6 +36,12 @@ public class MainActivity extends AppCompatActivity
     //回到原位置变量，我的位置的经纬度
     private double mLatitude;
     private double mLongtitude;
+
+    //自定义定位图标
+    private BitmapDescriptor mIconLocation;
+    private MyOrientationListener myOrientationListener;
+    //记录一下当前位置
+    private float mCurrentX;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -77,6 +86,20 @@ public class MainActivity extends AppCompatActivity
         option.setOpenGps(true);
         option.setScanSpan(1000);
         mLocationClient.setLocOption(option);
+
+        //初始化自定义图标
+        mIconLocation = BitmapDescriptorFactory.fromResource(R.mipmap.navigation);
+        myOrientationListener = new MyOrientationListener(context);
+
+        //当方向发生改变的时候，更新地图上方向图标的位置
+        myOrientationListener.setOnOrientationListener(new MyOrientationListener.OnOrientationListener()
+        {
+            @Override
+            public void onOrientationChanged(float x)
+            {
+                mCurrentX = x;
+            }
+        });
     }
 
 
@@ -128,6 +151,42 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+
+    private class MyLocationListener implements BDLocationListener
+    {
+        @Override
+        public void onReceiveLocation(BDLocation bdLocation)
+        {
+            MyLocationData data = new MyLocationData.Builder()//
+                    .direction(mCurrentX)//定位成功之后，才会更新方向
+                    .accuracy(bdLocation.getRadius())//
+                    .latitude(bdLocation.getLatitude())//
+                    .longitude(bdLocation.getLongitude())//
+                    .build();
+            mBaiduMap.setMyLocationData(data);
+            //设置自定义图标，箭头方向暂时不会跟随手机转动，需要设置方向传感器
+            MyLocationConfiguration config = new MyLocationConfiguration
+                    (MyLocationConfiguration.LocationMode.NORMAL, true, mIconLocation);
+            mBaiduMap.setMyLocationConfiguration(config);
+            //定位成功之后，更新一下我的位置，更新经纬度
+            mLatitude = bdLocation.getLatitude();
+            mLongtitude = bdLocation.getLongitude();
+
+            if (isFirstIn)
+            {
+                LatLng latLng = new LatLng(bdLocation.getLatitude(), bdLocation.getLongitude());
+                MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(latLng);
+                //地图位置使用动画效果转过去
+                mBaiduMap.animateMapStatus(msu);
+                //将isFirstIn设置为FALSE，以至于不会让屏幕一秒转一次
+                isFirstIn = false;
+                //定位完成后，弹出定位信息
+                Toast.makeText(context, bdLocation.getAddrStr(), Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+
     @Override
     protected void onResume()
     {
@@ -143,6 +202,8 @@ public class MainActivity extends AppCompatActivity
         mBaiduMap.setMyLocationEnabled(true);
         if (!mLocationClient.isStarted())
             mLocationClient.start();
+        //传感器也需要开启和关闭，开启方向传感器
+        myOrientationListener.start();
     }
 
     @Override
@@ -159,6 +220,8 @@ public class MainActivity extends AppCompatActivity
         //停止定位
         mBaiduMap.setMyLocationEnabled(false);
         mLocationClient.stop();
+        //传感器也需要开启和关闭，关闭方向传感器
+        myOrientationListener.stop();
     }
 
     @Override
@@ -166,36 +229,5 @@ public class MainActivity extends AppCompatActivity
     {
         super.onDestroy();
         mMapView.onDestroy();
-    }
-
-    private class MyLocationListener implements BDLocationListener
-    {
-        @Override
-        public void onReceiveLocation(BDLocation bdLocation)
-        {
-            MyLocationData data = new MyLocationData.Builder()//
-                    .accuracy(bdLocation.getRadius())//
-                    .latitude(bdLocation.getLatitude())//
-                    .longitude(bdLocation.getLongitude())//
-                    .build();
-            mBaiduMap.setMyLocationData(data);
-
-            //MyLocationConfiguration conf = new MyLocationConfiguration(LocationMode.NORMAL,,)
-            //定位成功之后，更新一下我的位置
-            mLatitude = bdLocation.getLatitude();
-            mLongtitude = bdLocation.getLongitude();
-
-            if (isFirstIn)
-            {
-                LatLng latLng = new LatLng(bdLocation.getLatitude(), bdLocation.getLongitude());
-                MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(latLng);
-                //地图位置使用动画效果转过去
-                mBaiduMap.animateMapStatus(msu);
-                //将isFirstIn设置为FALSE，以至于不会让屏幕一秒转一次
-                isFirstIn = false;
-                //定位完成后，弹出定位信息
-                Toast.makeText(context, bdLocation.getAddrStr(), Toast.LENGTH_LONG).show();
-            }
-        }
     }
 }
