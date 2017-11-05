@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/id_map_common"
+        android:title="@string/map_common"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/id_map_site"
+        app:showAsAction="never"
+        android:title="@string/map_site"/>
+
+    <item
+        android:id="@+id/id_map_traffic"
+        app:showAsAction="never"
+        android:title="@string/map_traffic"/>
+
+    <item
+        android:id="@+id/id_map_location"
+        app:showAsAction="never"
+        android:title="@string/map_myaddress"/>
+
+</menu>

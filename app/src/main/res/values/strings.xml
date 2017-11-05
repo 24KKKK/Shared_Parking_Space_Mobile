@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">共享停车位</string>
+    <string name="map_common">普通地图</string>
+    <string name="map_site">卫星地图</string>
+    <string name="map_traffic">开启实时交通</string>
+    <string name="map_myaddress">我的位置</string>
+
+</resources>
