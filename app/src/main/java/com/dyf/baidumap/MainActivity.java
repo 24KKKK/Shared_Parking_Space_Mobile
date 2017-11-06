@@ -5,6 +5,10 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baidu.location.BDLocation;
@@ -15,6 +19,7 @@ import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
+import com.baidu.mapapi.map.MapPoi;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
@@ -53,6 +58,8 @@ public class MainActivity extends AppCompatActivity
     //覆盖物相关
     //覆盖物图标
     private BitmapDescriptor mMarker;
+    //覆盖物信息展示
+    private RelativeLayout mMarkerLy;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -72,12 +79,51 @@ public class MainActivity extends AppCompatActivity
         initLocation();
         //初始化覆盖物图标
         initMarker();
+
+        mBaiduMap.setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener()
+        {
+            @Override
+            public boolean onMarkerClick(Marker marker)
+            {
+                Bundle extraInfo = marker.getExtraInfo();
+                Info info = (Info) extraInfo.getSerializable("info");
+                ImageView iv = (ImageView) mMarkerLy.findViewById(R.id.id_info_img);
+                TextView distance = (TextView) mMarkerLy.findViewById(R.id.id_info_distance);
+                TextView name = (TextView) mMarkerLy.findViewById(R.id.id_info_name);
+                TextView zan = (TextView) mMarkerLy.findViewById(R.id.id_info_zan);
+                iv.setImageResource(info.getImgId());
+                distance.setText(info.getDistance());
+                name.setText(info.getName());
+                zan.setText(info.getZan() + "");
+
+                mMarkerLy.setVisibility(View.VISIBLE);
+
+                return true;
+            }
+        });
+
+        //点击地图其他地方的时候，展示信息消失
+        mBaiduMap.setOnMapClickListener(new BaiduMap.OnMapClickListener()
+        {
+            @Override
+            public void onMapClick(LatLng latLng)
+            {
+                mMarkerLy.setVisibility(View.GONE);
+            }
+
+            @Override
+            public boolean onMapPoiClick(MapPoi mapPoi)
+            {
+                return false;
+            }
+        });
     }
 
     //初始化覆盖物图标
     private void initMarker()
     {
         mMarker = BitmapDescriptorFactory.fromResource(R.mipmap.marker);
+        mMarkerLy = (RelativeLayout) findViewById(R.id.id_marker_ly);
     }
 
     //初始化控件
