@@ -4,5 +4,8 @@
     <string name="map_site">卫星地图</string>
     <string name="map_traffic">开启实时交通</string>
     <string name="map_myaddress">我的位置</string>
+    <string name="mode_common">普通模式</string>
+    <string name="mode_following">跟随模式</string>
+    <string name="mode_compass">罗盘模式</string>
 
 </resources>

@@ -42,6 +42,8 @@ public class MainActivity extends AppCompatActivity
     private MyOrientationListener myOrientationListener;
     //记录一下当前位置
     private float mCurrentX;
+    //切换模式的变量
+    private MyLocationConfiguration.LocationMode mLocationMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -74,6 +76,8 @@ public class MainActivity extends AppCompatActivity
     //初始化定位
     private void initLocation()
     {
+        //定位模式默认使用普通模式
+        mLocationMode = MyLocationConfiguration.LocationMode.NORMAL;
         mLocationClient = new LocationClient(this);
         myLocationListener = new MyLocationListener();
         mLocationClient.registerLocationListener(myLocationListener);
@@ -115,14 +119,17 @@ public class MainActivity extends AppCompatActivity
     {
         switch (item.getItemId())
         {
+            //普通地图
             case R.id.id_map_common:
                 mBaiduMap.setMapType(BaiduMap.MAP_TYPE_NORMAL);
                 break;
 
+            //卫星地图
             case R.id.id_map_site:
                 mBaiduMap.setMapType(BaiduMap.MAP_TYPE_SATELLITE);
                 break;
 
+            //开启关闭实时交通
             case R.id.id_map_traffic:
                 if (mBaiduMap.isTrafficEnabled())
                 {
@@ -135,6 +142,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 break;
 
+            //我的位置
             case R.id.id_map_location:
                 //设置点击我的位置时，地图放大比例为500米
                 mBaiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(15.0f));
@@ -143,6 +151,21 @@ public class MainActivity extends AppCompatActivity
                 MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(latLng);
                 //地图位置使用动画效果转过去
                 mBaiduMap.animateMapStatus(msu);
+                break;
+
+            //普通模式
+            case R.id.id_map_mode_common:
+                mLocationMode = MyLocationConfiguration.LocationMode.NORMAL;
+                break;
+
+            //跟随模式
+            case R.id.id_map_mode_following:
+                mLocationMode = MyLocationConfiguration.LocationMode.FOLLOWING;
+                break;
+
+            //罗盘模式
+            case R.id.id_map_mode_compass:
+                mLocationMode = MyLocationConfiguration.LocationMode.COMPASS;
                 break;
 
             default:
@@ -166,7 +189,7 @@ public class MainActivity extends AppCompatActivity
             mBaiduMap.setMyLocationData(data);
             //设置自定义图标，箭头方向暂时不会跟随手机转动，需要设置方向传感器
             MyLocationConfiguration config = new MyLocationConfiguration
-                    (MyLocationConfiguration.LocationMode.NORMAL, true, mIconLocation);
+                    (mLocationMode, true, mIconLocation);
             mBaiduMap.setMyLocationConfiguration(config);
             //定位成功之后，更新一下我的位置，更新经纬度
             mLatitude = bdLocation.getLatitude();

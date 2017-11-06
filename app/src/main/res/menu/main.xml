@@ -4,8 +4,8 @@
 
     <item
         android:id="@+id/id_map_common"
-        android:title="@string/map_common"
-        app:showAsAction="never"/>
+        app:showAsAction="never"
+        android:title="@string/map_common"/>
 
     <item
         android:id="@+id/id_map_site"
@@ -21,5 +21,21 @@
         android:id="@+id/id_map_location"
         app:showAsAction="never"
         android:title="@string/map_myaddress"/>
+
+    <item
+        android:id="@+id/id_map_mode_common"
+        app:showAsAction="never"
+        android:title="@string/mode_common"/>
+
+    <item
+        android:id="@+id/id_map_mode_following"
+        app:showAsAction="never"
+        android:title="@string/mode_following"/>
+
+    <item
+        android:id="@+id/id_map_mode_compass"
+        app:showAsAction="never"
+        android:title="@string/mode_compass"/>
+
 
 </menu>
