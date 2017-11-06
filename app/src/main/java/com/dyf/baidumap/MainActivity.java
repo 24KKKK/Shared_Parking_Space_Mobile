@@ -18,9 +18,14 @@ import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.Marker;
+import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
+import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.model.LatLng;
+
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity
@@ -45,6 +50,10 @@ public class MainActivity extends AppCompatActivity
     //切换模式的变量
     private MyLocationConfiguration.LocationMode mLocationMode;
 
+    //覆盖物相关
+    //覆盖物图标
+    private BitmapDescriptor mMarker;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -61,6 +70,14 @@ public class MainActivity extends AppCompatActivity
         initView();
         //初始化定位
         initLocation();
+        //初始化覆盖物图标
+        initMarker();
+    }
+
+    //初始化覆盖物图标
+    private void initMarker()
+    {
+        mMarker = BitmapDescriptorFactory.fromResource(R.mipmap.marker);
     }
 
     //初始化控件
@@ -168,13 +185,50 @@ public class MainActivity extends AppCompatActivity
                 mLocationMode = MyLocationConfiguration.LocationMode.COMPASS;
                 break;
 
+            case R.id.id_add_overlay:
+                addOverlays(Info.infos);
+                break;
+
             default:
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * 添加覆盖物
+     *
+     * @param infos
+     */
+    private void addOverlays(List<Info> infos)
+    {
+        mBaiduMap.clear();
+        LatLng latLng = null;
+        Marker marker = null;
+        OverlayOptions options;
+        for (Info info : infos)
+        {
+            //经纬度
+            latLng = new LatLng(info.getLatitude(), info.getLongtitude());
+            //图标
+            options = new MarkerOptions()//
+                    .position(latLng)//指定marker的地图上的位置
+                    .icon(mMarker)//marker的图标
+                    .zIndex(5);//指定图层的位置，值越大，显示高层
+            //实例化marker
+            marker = (Marker) mBaiduMap.addOverlay(options);
+            Bundle arg0 = new Bundle();
+            arg0.putSerializable("info", info);
+            marker.setExtraInfo(arg0);
+        }
+        //每次添加完图层之后，把地图移动到第一个或者最后一个图层的位置，不然图标如果和所在位置差的远，看不到
+        MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(latLng);
+        mBaiduMap.setMapStatus(msu);
+    }
 
+    /**
+     * 定位到我的位置
+     */
     private class MyLocationListener implements BDLocationListener
     {
         @Override

@@ -37,5 +37,9 @@
         app:showAsAction="never"
         android:title="@string/mode_compass"/>
 
+    <item
+        android:id="@+id/id_add_overlay"
+        app:showAsAction="never"
+        android:title="@string/add_overlay"/>
 
 </menu>
