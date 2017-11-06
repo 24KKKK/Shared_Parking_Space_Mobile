@@ -1,6 +1,8 @@
 package com.dyf.baidumap;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -19,6 +21,7 @@ import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
+import com.baidu.mapapi.map.InfoWindow;
 import com.baidu.mapapi.map.MapPoi;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
@@ -96,8 +99,39 @@ public class MainActivity extends AppCompatActivity
                 name.setText(info.getName());
                 zan.setText(info.getZan() + "");
 
-                mMarkerLy.setVisibility(View.VISIBLE);
+                //点击覆盖物，显示文本信息
+                InfoWindow infoWindow ;
+                //infoWindow里面放入一个textView，textView的设置
+                TextView tv = new TextView(context);
+                tv.setBackgroundResource(R.mipmap.location_tips);
+                tv.setPadding(30,30,30,20);
+                tv.setText(info.getName());
+                tv.setTextColor(Color.parseColor("#ffffff"));
 
+                //获得经纬度
+                final LatLng latLng = marker.getPosition();
+                //通过经纬度拿到屏幕上实际坐标的值
+                Point p = mBaiduMap.getProjection().toScreenLocation(latLng);
+                //调整这个坐标
+                p.y-=47;
+                //把这个坐标转化为经纬度
+                LatLng ll = mBaiduMap.getProjection().fromScreenLocation(p);
+
+                //初始化infoWindow，把经纬度传给infowindow
+                infoWindow = new InfoWindow(tv,ll,1);
+                /*infoWindow = new InfoWindow(mMarker, ll, 1, new OnInfoWindowClickListener()
+                {
+                    @Override
+                    public void onInfoWindowClick()
+                    {
+                        //infowindow点击的处理
+                        mBaiduMap.hideInfoWindow();
+                    }
+                });*/
+
+                mBaiduMap.showInfoWindow(infoWindow);
+
+                mMarkerLy.setVisibility(View.VISIBLE);
                 return true;
             }
         });
@@ -108,7 +142,10 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onMapClick(LatLng latLng)
             {
+                //展示信息消失
                 mMarkerLy.setVisibility(View.GONE);
+                //图标上方文本信息消失
+                mBaiduMap.hideInfoWindow();
             }
 
             @Override
