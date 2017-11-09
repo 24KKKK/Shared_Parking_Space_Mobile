@@ -12,6 +12,23 @@
         android:layout_height="match_parent"
         android:clickable="true"/>
 
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="55dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
+
+        <Button
+            android:id="@+id/id_btn_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="我在哪"/>
+
+    </LinearLayout>
+
     <RelativeLayout
         android:id="@+id/id_marker_ly"
         android:clickable="true"

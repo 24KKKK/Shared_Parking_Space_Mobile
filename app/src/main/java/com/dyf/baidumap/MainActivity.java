@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity
     private LocationClient mLocationClient;
     private MyLocationListener myLocationListener;
     private boolean isFirstIn = true;
+    private Button mBtnLocation;
     //回到原位置变量，我的位置的经纬度
     private double mLatitude;
     private double mLongtitude;
@@ -82,6 +84,22 @@ public class MainActivity extends AppCompatActivity
         initLocation();
         //初始化覆盖物图标
         initMarker();
+
+        //点击我在哪mBtnLocation按钮，地图移动到我的位置
+        mBtnLocation.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                //设置点击我的位置时，地图放大比例为500米
+                mBaiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(15.0f));
+                //设置地图中心点为用户位置
+                LatLng latLng = new LatLng(mLatitude, mLongtitude);
+                MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(latLng);
+                //地图位置使用动画效果转过去
+                mBaiduMap.animateMapStatus(msu);
+            }
+        });
 
         mBaiduMap.setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener()
         {
@@ -156,6 +174,7 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+
     //初始化覆盖物图标
     private void initMarker()
     {
@@ -166,6 +185,7 @@ public class MainActivity extends AppCompatActivity
     //初始化控件
     private void initView()
     {
+        mBtnLocation = (Button) findViewById(R.id.id_btn_location);
         mMapView = (MapView) findViewById(R.id.id_bmapView);
         mBaiduMap = mMapView.getMap();
         //设置地图初始放大比例，500米
