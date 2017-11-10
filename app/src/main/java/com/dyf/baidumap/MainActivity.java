@@ -47,7 +47,13 @@ public class MainActivity extends AppCompatActivity
     private LocationClient mLocationClient;
     private MyLocationListener myLocationListener;
     private boolean isFirstIn = true;
+    //导航时的起点和终点
+    private LatLng mLastLocationData;
+    private LatLng mDestLocationData;
+    //分别是我在哪，模拟导航，开始导航三个按钮
     private Button mBtnLocation;
+    private Button mBtnMockNav;
+    private Button mBtnRealNav;
     //回到原位置变量，我的位置的经纬度
     private double mLatitude;
     private double mLongtitude;
@@ -85,6 +91,21 @@ public class MainActivity extends AppCompatActivity
         //初始化覆盖物图标
         initMarker();
 
+        //通过长按设置终点位置
+        mBaiduMap.setOnMapLongClickListener(new BaiduMap.OnMapLongClickListener()
+        {
+            @Override
+            public void onMapLongClick(LatLng latLng)
+            {
+                //用户长按设置之后，给用户一个提示
+                Toast.makeText(MainActivity.this,"设置目的地成功",Toast.LENGTH_SHORT).show();
+                //设置终点的位置
+                mDestLocationData = latLng;
+                //给终点设置一下图标
+                addDestInfoOverlay(latLng);
+            }
+        });
+
         //点击我在哪mBtnLocation按钮，地图移动到我的位置
         mBtnLocation.setOnClickListener(new View.OnClickListener()
         {
@@ -98,6 +119,26 @@ public class MainActivity extends AppCompatActivity
                 MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(latLng);
                 //地图位置使用动画效果转过去
                 mBaiduMap.animateMapStatus(msu);
+            }
+        });
+
+        //点击模拟导航按钮
+        mBtnMockNav.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+
+            }
+        });
+
+        //点击开始导航按钮
+        mBtnRealNav.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+
             }
         });
 
@@ -118,11 +159,11 @@ public class MainActivity extends AppCompatActivity
                 zan.setText(info.getZan() + "");
 
                 //点击覆盖物，显示文本信息
-                InfoWindow infoWindow ;
+                InfoWindow infoWindow;
                 //infoWindow里面放入一个textView，textView的设置
                 TextView tv = new TextView(context);
                 tv.setBackgroundResource(R.mipmap.location_tips);
-                tv.setPadding(30,30,30,20);
+                tv.setPadding(30, 30, 30, 20);
                 tv.setText(info.getName());
                 tv.setTextColor(Color.parseColor("#ffffff"));
 
@@ -131,12 +172,12 @@ public class MainActivity extends AppCompatActivity
                 //通过经纬度拿到屏幕上实际坐标的值
                 Point p = mBaiduMap.getProjection().toScreenLocation(latLng);
                 //调整这个坐标
-                p.y-=47;
+                p.y -= 47;
                 //把这个坐标转化为经纬度
                 LatLng ll = mBaiduMap.getProjection().fromScreenLocation(p);
 
                 //初始化infoWindow，把经纬度传给infowindow
-                infoWindow = new InfoWindow(tv,ll,1);
+                infoWindow = new InfoWindow(tv, ll, 1);
                 /*infoWindow = new InfoWindow(mMarker, ll, 1, new OnInfoWindowClickListener()
                 {
                     @Override
@@ -174,6 +215,17 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    //给终点设置一下图标，设置终点信息
+    private void addDestInfoOverlay(LatLng destInfo)
+    {
+        //清除原来的
+        mBaiduMap.clear();
+        //设置地点覆盖物的信息
+        OverlayOptions options = new MarkerOptions().position(destInfo)
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.myloc_72px))
+                .zIndex(5);
+        mBaiduMap.addOverlay(options);
+    }
 
     //初始化覆盖物图标
     private void initMarker()
@@ -186,6 +238,8 @@ public class MainActivity extends AppCompatActivity
     private void initView()
     {
         mBtnLocation = (Button) findViewById(R.id.id_btn_location);
+        mBtnMockNav = (Button) findViewById(R.id.id_btn_mocknav);
+        mBtnRealNav = (Button) findViewById(R.id.id_btn_realnav);
         mMapView = (MapView) findViewById(R.id.id_bmapView);
         mBaiduMap = mMapView.getMap();
         //设置地图初始放大比例，500米
@@ -288,6 +342,7 @@ public class MainActivity extends AppCompatActivity
                 mLocationMode = MyLocationConfiguration.LocationMode.COMPASS;
                 break;
 
+            //点击添加覆盖物
             case R.id.id_add_overlay:
                 addOverlays(Info.infos);
                 break;

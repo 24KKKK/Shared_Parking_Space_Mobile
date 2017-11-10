@@ -27,6 +27,18 @@
             android:layout_height="wrap_content"
             android:text="我在哪"/>
 
+        <Button
+            android:id="@+id/id_btn_mocknav"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="模拟导航"/>
+
+        <Button
+            android:id="@+id/id_btn_realnav"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="开始导航"/>
+
     </LinearLayout>
 
     <RelativeLayout
