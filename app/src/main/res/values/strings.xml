@@ -8,5 +8,8 @@
     <string name="mode_following">跟随模式</string>
     <string name="mode_compass">罗盘模式</string>
     <string name="add_overlay">添加覆盖物</string>
+    <string name="search_bydistance">按距离查找</string>
+    <string name="search_bytime">按时间查找</string>
+    <string name="search_bynoparknum">按停车数查找</string>
 
 </resources>

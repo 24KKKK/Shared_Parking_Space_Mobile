@@ -2,6 +2,7 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
     <item
         android:id="@+id/id_map_common"
         app:showAsAction="never"
@@ -11,16 +12,19 @@
         android:id="@+id/id_map_site"
         app:showAsAction="never"
         android:title="@string/map_site"/>
-
+-->
     <item
         android:id="@+id/id_map_traffic"
         app:showAsAction="never"
         android:title="@string/map_traffic"/>
 
+
+    <!--
+    //我的位置
     <item
         android:id="@+id/id_map_location"
         app:showAsAction="never"
-        android:title="@string/map_myaddress"/>
+        android:title="@string/map_myaddress"/>-->
 
     <item
         android:id="@+id/id_map_mode_common"
@@ -41,5 +45,20 @@
         android:id="@+id/id_add_overlay"
         app:showAsAction="never"
         android:title="@string/add_overlay"/>
+
+    <item
+        android:id="@+id/id_search_bydistance"
+        app:showAsAction="never"
+        android:title="@string/search_bydistance"/>
+
+    <item
+        android:id="@+id/id_search_bytime"
+        app:showAsAction="never"
+        android:title="@string/search_bytime"/>
+
+    <item
+        android:id="@+id/id_search_bynoparknum"
+        app:showAsAction="never"
+        android:title="@string/search_bynoparknum"/>
 
 </menu>

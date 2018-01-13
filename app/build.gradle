@@ -49,4 +49,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile files('libs/httpmime-4.1.2.jar')
     compile files('libs/BaiduLBS_Android.jar')
+    compile files('libs/ksoap2-android-assembly-2.4-jar-with-dependencies.jar')
 }

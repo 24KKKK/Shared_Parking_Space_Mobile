@@ -2,7 +2,9 @@ package com.dyf.baidumap;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -18,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,11 +49,15 @@ import com.baidu.navisdk.adapter.BNOuterTTSPlayerCallback;
 import com.baidu.navisdk.adapter.BNRoutePlanNode;
 import com.baidu.navisdk.adapter.BNaviSettingManager;
 import com.baidu.navisdk.adapter.BaiduNaviManager;
+import com.dyf.utils.Constant;
+import com.dyf.utils.Convert;
+import com.dyf.utils.SendRequest;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity
@@ -58,6 +65,7 @@ public class MainActivity extends AppCompatActivity
     private MapView mMapView;
     private BaiduMap mBaiduMap;
     private Context context;
+    private ProgressBar bar;
 
     //定位相关
     private LocationClient mLocationClient;
@@ -143,8 +151,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v)
             {
-                //设置点击我的位置时，地图放大比例为500米
-                mBaiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(15.0f));
+                //设置点击我的位置时，地图放大比例
+                mBaiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(Constant.BASIC_ZOOM));
                 //设置地图中心点为用户位置
                 LatLng latLng = new LatLng(mLatitude, mLongtitude);
                 MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(latLng);
@@ -161,7 +169,7 @@ public class MainActivity extends AppCompatActivity
             {
                 if (mDestLocationData == null)
                 {
-                    Toast.makeText(MainActivity.this,"长按地图设置目标地点",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "长按地图设置目标地点", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 routeplanToNavi(false);
@@ -176,7 +184,7 @@ public class MainActivity extends AppCompatActivity
             {
                 if (mDestLocationData == null)
                 {
-                    Toast.makeText(MainActivity.this,"长按地图设置目标地点",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "长按地图设置目标地点", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 routeplanToNavi(true);
@@ -299,12 +307,12 @@ public class MainActivity extends AppCompatActivity
             {
                 case BaiduNaviManager.TTSPlayMsgType.PLAY_START_MSG:
                 {
-                    // showToastMsg("Handler : TTS play start");
+                    showToastMsg("Handler : TTS play start");
                     break;
                 }
                 case BaiduNaviManager.TTSPlayMsgType.PLAY_END_MSG:
                 {
-                    // showToastMsg("Handler : TTS play end");
+                    showToastMsg("Handler : TTS play end");
                     break;
                 }
                 default:
@@ -322,13 +330,13 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void playEnd()
         {
-            // showToastMsg("TTSPlayStateListener : TTS play end");
+            showToastMsg("TTSPlayStateListener : TTS play end");
         }
 
         @Override
         public void playStart()
         {
-            // showToastMsg("TTSPlayStateListener : TTS play start");
+            showToastMsg("TTSPlayStateListener : TTS play start");
         }
     };
 
@@ -347,8 +355,6 @@ public class MainActivity extends AppCompatActivity
 
     private boolean hasBasePhoneAuth()
     {
-        // TODO Auto-generated method stub
-
         PackageManager pm = this.getPackageManager();
         for (String auth : authBaseArr)
         {
@@ -362,8 +368,6 @@ public class MainActivity extends AppCompatActivity
 
     private boolean hasCompletePhoneAuth()
     {
-        // TODO Auto-generated method stub
-
         PackageManager pm = this.getPackageManager();
         for (String auth : authComArr)
         {
@@ -375,21 +379,19 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    /**
+     * 初始化导航
+     */
     private void initNavi()
     {
-
         BNOuterTTSPlayerCallback ttsCallback = null;
-
         // 申请权限
         if (android.os.Build.VERSION.SDK_INT >= 23)
         {
-
             if (!hasBasePhoneAuth())
             {
-
                 this.requestPermissions(authBaseArr, authBaseRequestCode);
                 return;
-
             }
         }
 
@@ -452,7 +454,6 @@ public class MainActivity extends AppCompatActivity
      */
     private void routeplanToNavi(boolean mock)
     {
-
         BNRoutePlanNode.CoordinateType coType = BNRoutePlanNode.CoordinateType.BD09LL;
         mCoordinateType = coType;
         if (!hasInitSuccess)
@@ -486,10 +487,10 @@ public class MainActivity extends AppCompatActivity
         //sNode = new BNRoutePlanNode(116.30784537597782, 40.057009624099436, "百度大厦", null, coType);
         //eNode = new BNRoutePlanNode(116.40386525193937, 39.915160800132085, "北京天安门", null, coType);
         mLastLocationData = new LatLng(mLatitude, mLongtitude);
-        Log.i("我的mLastLocationData",mLastLocationData.toString());
-        Log.i("我的mDestLocationData",mDestLocationData.toString());
-        sNode = new BNRoutePlanNode(mLastLocationData.longitude,mLastLocationData.latitude,"我的地点",null,coType);
-        eNode = new BNRoutePlanNode(mDestLocationData.longitude,mDestLocationData.latitude,"目标地点",null,coType);
+        Log.i("我的mLastLocationData", mLastLocationData.toString());
+        Log.i("我的mDestLocationData", mDestLocationData.toString());
+        sNode = new BNRoutePlanNode(mLastLocationData.longitude, mLastLocationData.latitude, "我的地点", null, coType);
+        eNode = new BNRoutePlanNode(mDestLocationData.longitude, mDestLocationData.latitude, "目标地点", null, coType);
 
         if (sNode != null && eNode != null)
         {
@@ -516,7 +517,6 @@ public class MainActivity extends AppCompatActivity
 
     public class DemoRoutePlanListener implements BaiduNaviManager.RoutePlanListener
     {
-
         private BNRoutePlanNode mBNRoutePlanNode = null;
 
         public DemoRoutePlanListener(BNRoutePlanNode node)
@@ -530,7 +530,6 @@ public class MainActivity extends AppCompatActivity
             /*
              * 设置途径点以及resetEndNode会回调该接口
              */
-
             for (Activity ac : activityList)
             {
                 if (ac.getClass().getName().endsWith("BNDemoGuideActivity"))
@@ -549,8 +548,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onRoutePlanFailed()
         {
-            // TODO Auto-generated method stub
-            Log.e("TAG","算路失败");
+            Log.e("TAG", "算路失败");
             Toast.makeText(MainActivity.this, "算路失败", Toast.LENGTH_SHORT).show();
         }
     }
@@ -592,13 +590,15 @@ public class MainActivity extends AppCompatActivity
     //初始化控件
     private void initView()
     {
+        bar = (ProgressBar) findViewById(R.id.id_pgb_main);
+        bar.setVisibility(View.GONE);
         mBtnLocation = (Button) findViewById(R.id.id_btn_location);
         mBtnMockNav = (Button) findViewById(R.id.id_btn_mocknav);
         mBtnRealNav = (Button) findViewById(R.id.id_btn_realnav);
         mMapView = (MapView) findViewById(R.id.id_bmapView);
         mBaiduMap = mMapView.getMap();
-        //设置地图初始放大比例，500米
-        MapStatusUpdate msu = MapStatusUpdateFactory.zoomTo(15.0f);
+        //设置地图初始放大比例
+        MapStatusUpdate msu = MapStatusUpdateFactory.zoomTo(Constant.BASIC_ZOOM);
         mBaiduMap.setMapStatus(msu);
     }
 
@@ -649,14 +649,14 @@ public class MainActivity extends AppCompatActivity
         switch (item.getItemId())
         {
             //普通地图
-            case R.id.id_map_common:
+            /*case R.id.id_map_common:
                 mBaiduMap.setMapType(BaiduMap.MAP_TYPE_NORMAL);
-                break;
+                break;*/
 
             //卫星地图
-            case R.id.id_map_site:
+            /*case R.id.id_map_site:
                 mBaiduMap.setMapType(BaiduMap.MAP_TYPE_SATELLITE);
-                break;
+                break;*/
 
             //开启关闭实时交通
             case R.id.id_map_traffic:
@@ -672,7 +672,7 @@ public class MainActivity extends AppCompatActivity
                 break;
 
             //我的位置
-            case R.id.id_map_location:
+            /*case R.id.id_map_location:
                 //设置点击我的位置时，地图放大比例为500米
                 mBaiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(15.0f));
                 //设置地图中心点为用户位置
@@ -680,7 +680,7 @@ public class MainActivity extends AppCompatActivity
                 MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(latLng);
                 //地图位置使用动画效果转过去
                 mBaiduMap.animateMapStatus(msu);
-                break;
+                break;*/
 
             //普通模式
             case R.id.id_map_mode_common:
@@ -702,10 +702,131 @@ public class MainActivity extends AppCompatActivity
                 addOverlays(Info.infos);
                 break;
 
+            //根据距离查找停车场
+            case R.id.id_search_bydistance:
+                searchBestParklotInfo("distance", mLongtitude, mLatitude);
+                break;
+            //根据时间查找停车场
+            case R.id.id_search_bytime:
+                searchBestParklotInfo("time", mLongtitude, mLatitude);
+                break;
+            //根据未停车数查找停车场
+            case R.id.id_search_bynoparknum:
+                searchBestParklotInfo("noParkNum", mLongtitude, mLatitude);
+                break;
+
             default:
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private Handler handler = new Handler()
+    {
+        //作为选择确定，取消还是下一个的标记
+
+
+        @Override
+        public void handleMessage(Message msg)
+        {
+            int type = msg.what;
+            List<Map<String, String>> listInfos = (List<Map<String, String>>) msg.obj;
+            switch (type)
+            {
+                case 1:
+                    bar.setVisibility(View.GONE);
+                    showAlertDialog("提示", listInfos);
+                    break;
+            }
+        }
+    };
+
+    /**
+     * 创建确定取消对话框，服务器端返回消息后，在界面显示第一个结果的信息
+     *
+     * @param title 对话框标题
+     * @param body  对话框要显示的内容
+     */
+    private void showAlertDialog(String title, final List<Map<String, String>> body)
+    {
+        final int num = 0;
+        int time = Integer.parseInt(body.get(num).get("time")) / 60;
+        if (time < 1)
+        {
+            time = 1;
+        }
+
+        String message = "名称：" + body.get(num).get("parklotName")
+                + " ，距离为：" + body.get(num).get("distance")
+                + " ，大概时间为：" + time + "分钟，"
+                + " ，剩余车位数为：" + body.get(num).get("noParkNum");
+        //新建对话框，使用Builder来创建带确定，取消的对话框
+        AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+        //alertDialog.setIcon(R.drawable.img_border);  //设置对话框的图标
+        alertDialog.setTitle(title);  //设置对话框的标题
+        alertDialog.setMessage(message);  //设置对话框要显示的内容
+        //添加确定，取消按钮，先添加 确定  按钮
+        alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "确定", new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+                double destLng = Double.parseDouble(body.get(num).get("parklotLng"));
+                double destLat = Double.parseDouble(body.get(num).get("parklotLat"));
+                //设置终点的位置
+                LatLng latLng = new LatLng(destLat, destLng);
+                mDestLocationData = latLng;
+                //给终点设置一下图标
+                addDestInfoOverlay(latLng);
+                showToastMsg("终点坐标：" + destLng + " " + destLat);
+                routeplanToNavi(true);
+            }
+        });
+        //添加取消按钮
+        alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "取消", new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+            }
+        });
+        //添加（中立）下一个按钮
+                /*alertDialog.setButton(DialogInterface.BUTTON_NEUTRAL, "下一个", new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        showToastMsg("下一个  ");
+                    }
+                });*/
+        //显示对话框
+        alertDialog.show();
+    }
+
+    /**
+     * 根据不同的条件查找适合的停车场信息
+     *
+     * @param condi       条件
+     * @param mLongtitude 个人经度信息
+     * @param mLatitude   个人纬度信息
+     */
+    private void searchBestParklotInfo(final String condi, final double mLongtitude, final double mLatitude)
+    {
+        bar.setVisibility(View.VISIBLE);
+        new Thread()
+        {
+            @Override
+            public void run()
+            {
+                Message message = new Message();
+                message.what = 1;
+                String selfLng = Convert.doubleToString(mLongtitude);
+                String selfLat = Convert.doubleToString(mLatitude);
+                message.obj = SendRequest.getBestParklotInfo(condi, selfLng, selfLat);
+                Log.i("getBestParklotInfo:", message.obj.toString());
+                handler.sendMessage(message);
+            }
+        }.start();
     }
 
     /**

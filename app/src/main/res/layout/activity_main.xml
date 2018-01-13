@@ -123,4 +123,16 @@
 
     </RelativeLayout>
 
+    <ProgressBar
+        android:id="@+id/id_pgb_main"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="115dp"
+        android:layout_marginStart="115dp"
+        android:layout_marginTop="238dp"/>
+
 </RelativeLayout>
