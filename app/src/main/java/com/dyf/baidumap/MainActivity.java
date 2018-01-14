@@ -19,7 +19,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -49,6 +48,7 @@ import com.baidu.navisdk.adapter.BNOuterTTSPlayerCallback;
 import com.baidu.navisdk.adapter.BNRoutePlanNode;
 import com.baidu.navisdk.adapter.BNaviSettingManager;
 import com.baidu.navisdk.adapter.BaiduNaviManager;
+import com.dyf.model.ResultParklotInfo;
 import com.dyf.utils.Constant;
 import com.dyf.utils.Convert;
 import com.dyf.utils.SendRequest;
@@ -191,21 +191,22 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        //点击 覆盖物 图标
         mBaiduMap.setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener()
         {
             @Override
             public boolean onMarkerClick(Marker marker)
             {
                 Bundle extraInfo = marker.getExtraInfo();
-                Info info = (Info) extraInfo.getSerializable("info");
-                ImageView iv = (ImageView) mMarkerLy.findViewById(R.id.id_info_img);
+                ResultParklotInfo resultParklotInfo  = (ResultParklotInfo) extraInfo.getSerializable("result");
+                //ImageView iv = (ImageView) mMarkerLy.findViewById(R.id.id_info_img);
                 TextView distance = (TextView) mMarkerLy.findViewById(R.id.id_info_distance);
                 TextView name = (TextView) mMarkerLy.findViewById(R.id.id_info_name);
-                TextView zan = (TextView) mMarkerLy.findViewById(R.id.id_info_zan);
-                iv.setImageResource(info.getImgId());
-                distance.setText(info.getDistance());
-                name.setText(info.getName());
-                zan.setText(info.getZan() + "");
+                //TextView zan = (TextView) mMarkerLy.findViewById(R.id.id_info_zan);
+                //iv.setImageResource(info.getImgId());
+                distance.setText(String.valueOf(resultParklotInfo.getDistance()));
+                name.setText(resultParklotInfo.getParklotName());
+                //zan.setText(0);
 
                 //点击覆盖物，显示文本信息
                 InfoWindow infoWindow;
@@ -213,7 +214,7 @@ public class MainActivity extends AppCompatActivity
                 TextView tv = new TextView(context);
                 tv.setBackgroundResource(R.mipmap.location_tips);
                 tv.setPadding(30, 30, 30, 20);
-                tv.setText(info.getName());
+                tv.setText(resultParklotInfo.getParklotName());
                 tv.setTextColor(Color.parseColor("#ffffff"));
 
                 //获得经纬度
@@ -497,7 +498,6 @@ public class MainActivity extends AppCompatActivity
             List<BNRoutePlanNode> list = new ArrayList<BNRoutePlanNode>();
             list.add(sNode);
             list.add(eNode);
-
             // 开发者可以使用旧的算路接口，也可以使用新的算路接口,可以接收诱导信息等
             // BaiduNaviManager.getInstance().launchNavigator(this, list, 1, true, new DemoRoutePlanListener(sNode));
             BaiduNaviManager.getInstance().launchNavigator(this, list, 1, mock, new DemoRoutePlanListener(sNode),
@@ -518,12 +518,10 @@ public class MainActivity extends AppCompatActivity
     public class DemoRoutePlanListener implements BaiduNaviManager.RoutePlanListener
     {
         private BNRoutePlanNode mBNRoutePlanNode = null;
-
         public DemoRoutePlanListener(BNRoutePlanNode node)
         {
             mBNRoutePlanNode = node;
         }
-
         @Override
         public void onJumpToNavigator()
         {
@@ -699,7 +697,7 @@ public class MainActivity extends AppCompatActivity
 
             //点击添加覆盖物
             case R.id.id_add_overlay:
-                addOverlays(Info.infos);
+                addOverlays();
                 break;
 
             //根据距离查找停车场
@@ -721,11 +719,11 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    private Handler handler = new Handler()
+    /**
+     * 根据条件获取合适停车场的handler
+     */
+    private Handler getBestHandler = new Handler()
     {
-        //作为选择确定，取消还是下一个的标记
-
-
         @Override
         public void handleMessage(Message msg)
         {
@@ -735,7 +733,79 @@ public class MainActivity extends AppCompatActivity
             {
                 case 1:
                     bar.setVisibility(View.GONE);
-                    showAlertDialog("提示", listInfos);
+                    if (listInfos.size()>0)
+                    {
+                        showAlertDialog("提示", listInfos);
+                    }else {
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("提示")
+                                .setMessage("没有获取到停车场信息")
+                                .setPositiveButton("确定",null)
+                                .show();
+                    }
+
+                    break;
+            }
+        }
+    };
+
+    /**
+     * 获取全部停车场信息的handler
+     */
+    private Handler getAllHandler = new Handler()
+    {
+        @Override
+        public void handleMessage(Message msg)
+        {
+            int type = msg.what;
+            switch (type)
+            {
+                case 1:
+                    bar.setVisibility(View.GONE);
+                    mBaiduMap.clear();
+                    LatLng latLng = null;
+                    Marker marker = null;
+                    OverlayOptions options;
+                    List<Map<String,String>> listItems = (List<Map<String, String>>) msg.obj;
+                    List<ResultParklotInfo> resultParklotInfos = new ArrayList<ResultParklotInfo>();
+                    if(listItems.size()>0)
+                    {
+                        for (int i = 0; i<listItems.size();i++)
+                        {
+                            String parklotName = listItems.get(i).get("parklotName");
+                            int distance = Integer.parseInt(listItems.get(i).get("distance")) ; // 车辆距离停车场的距离，单位 米
+                            int time = Integer.parseInt( listItems.get(i).get("time"));// 车辆行驶到停车场所需的时间
+                            int noParkNum = Integer.parseInt( listItems.get(i).get("noParkNum")); //停车场的未停车数
+                            double noParkRate = Double.parseDouble(listItems.get(i).get("noParkRate")); //停车场的未停车率
+                            int parklotAmount = Integer.parseInt(listItems.get(i).get("parklotAmount")); // 停车场车位数量
+                            String parklotLng = listItems.get(i).get("parklotLng"); // 停车场位置精度
+                            String parklotLat = listItems.get(i).get("parklotLat");// 停车场位置纬度
+                            String parklotDescription = listItems.get(i).get("parklotDescription");// 停车场描述
+                            ResultParklotInfo resultParklotInfo = new ResultParklotInfo(parklotName,distance,time,noParkNum,parklotAmount,parklotLng,parklotLat,parklotDescription);
+                            resultParklotInfos.add(resultParklotInfo);
+                        }
+
+                        for (ResultParklotInfo result : resultParklotInfos)
+                        {
+                            //经纬度
+                            latLng = new LatLng(Double.parseDouble(result.getParklotLat()),Double.parseDouble(result.getParklotLng()));
+                            //图标
+                            options = new MarkerOptions()//
+                                    .position(latLng)//指定marker的地图上的位置
+                                    .icon(mMarker)//marker的图标
+                                    .zIndex(5);//指定图层的位置，值越大，显示高层
+                            //实例化marker
+                            marker = (Marker) mBaiduMap.addOverlay(options);
+                            Bundle arg0 = new Bundle();
+                            arg0.putSerializable("result",result);
+                            marker.setExtraInfo(arg0);
+                        }
+                    }
+
+                    //每次添加完图层之后，把地图移动到第一个或者最后一个图层的位置，不然图标如果和所在位置差的远，看不到
+                    //newLatLng方法里面的参数写latlng，就是移动到第一个或者最后一个图层的位置，我这里还让地图以我为中心
+                    MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(new LatLng(mLatitude,mLongtitude));
+                    mBaiduMap.setMapStatus(msu);
                     break;
             }
         }
@@ -758,8 +828,8 @@ public class MainActivity extends AppCompatActivity
 
         String message = "名称：" + body.get(num).get("parklotName")
                 + " ，距离为：" + body.get(num).get("distance")
-                + " ，大概时间为：" + time + "分钟，"
-                + " ，剩余车位数为：" + body.get(num).get("noParkNum");
+                + "米，大概时间为：" + time + "分钟，剩余车位数为："
+                + body.get(num).get("noParkNum");
         //新建对话框，使用Builder来创建带确定，取消的对话框
         AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
         //alertDialog.setIcon(R.drawable.img_border);  //设置对话框的图标
@@ -824,40 +894,32 @@ public class MainActivity extends AppCompatActivity
                 String selfLat = Convert.doubleToString(mLatitude);
                 message.obj = SendRequest.getBestParklotInfo(condi, selfLng, selfLat);
                 Log.i("getBestParklotInfo:", message.obj.toString());
-                handler.sendMessage(message);
+                getBestHandler.sendMessage(message);
             }
         }.start();
     }
 
     /**
      * 添加覆盖物
-     *
-     * @param infos
      */
-    private void addOverlays(List<Info> infos)
+    private void addOverlays()
     {
-        mBaiduMap.clear();
-        LatLng latLng = null;
-        Marker marker = null;
-        OverlayOptions options;
-        for (Info info : infos)
+        bar.setVisibility(View.VISIBLE);
+        new Thread()
         {
-            //经纬度
-            latLng = new LatLng(info.getLatitude(), info.getLongtitude());
-            //图标
-            options = new MarkerOptions()//
-                    .position(latLng)//指定marker的地图上的位置
-                    .icon(mMarker)//marker的图标
-                    .zIndex(5);//指定图层的位置，值越大，显示高层
-            //实例化marker
-            marker = (Marker) mBaiduMap.addOverlay(options);
-            Bundle arg0 = new Bundle();
-            arg0.putSerializable("info", info);
-            marker.setExtraInfo(arg0);
-        }
-        //每次添加完图层之后，把地图移动到第一个或者最后一个图层的位置，不然图标如果和所在位置差的远，看不到
-        MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(latLng);
-        mBaiduMap.setMapStatus(msu);
+            @Override
+            public void run()
+            {
+                Message message = new Message();
+                message.what = 1;
+                String selfLng = Convert.doubleToString(mLongtitude);
+                String selfLat = Convert.doubleToString(mLatitude);
+                message.obj = SendRequest.getAllParklotInfo(selfLng, selfLat);
+                Log.i("getAllParklotInfo:", message.obj.toString());
+                getAllHandler.sendMessage(message);
+            }
+        }.start();
+
     }
 
     /**

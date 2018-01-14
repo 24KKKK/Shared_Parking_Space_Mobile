@@ -50,7 +50,7 @@
         android:visibility="gone"
         android:background="#cc4e5a6b">
 
-        <ImageView
+        <!--<ImageView
             android:id="@+id/id_info_img"
             android:layout_width="match_parent"
             android:layout_height="150dp"
@@ -61,7 +61,7 @@
             android:background="@drawable/img_border"
             android:scaleType="fitXY"
             android:src="@mipmap/a01"
-            />
+            />-->
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -104,19 +104,19 @@
                 android:orientation="horizontal"
                 >
 
-                <ImageView
+                <!--<ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@mipmap/map_zan"
-                    android:clickable="true"/>
+                    android:clickable="true"/>-->
 
-                <TextView
+                <!--<TextView
                     android:id="@+id/id_info_zan"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:text="2523"
-                    android:textColor="#fff5eb"/>
+                    android:textColor="#fff5eb"/>-->
 
             </LinearLayout>
         </RelativeLayout>

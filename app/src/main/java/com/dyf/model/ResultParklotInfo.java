@@ -1,12 +1,15 @@
 package com.dyf.model;
 
+import java.io.Serializable;
+
 /**
  * 从服务器返回的停车场信息实体类
  * Created by diy on 2018-01-13.
  */
 
-public class ResultParklotInfo
+public class ResultParklotInfo implements Serializable
 {
+    private static final long serialVersionUID = -1537235388599053145L;
     private String parklotName; // 停车场名称
     private int distance; // 车辆距离停车场的距离，单位 米
     private int time;// 车辆行驶到停车场所需的时间
@@ -21,6 +24,41 @@ public class ResultParklotInfo
     {
     }
 
+    /**
+     * 不包含未停车率
+     * @param parklotName
+     * @param distance
+     * @param time
+     * @param noParkNum
+     * @param parklotAmount
+     * @param parklotLng
+     * @param parklotLat
+     * @param parklotDescription
+     */
+    public ResultParklotInfo(String parklotName, int distance, int time, int noParkNum, int parklotAmount, String parklotLng, String parklotLat, String parklotDescription)
+    {
+        this.parklotName = parklotName;
+        this.distance = distance;
+        this.time = time;
+        this.noParkNum = noParkNum;
+        this.parklotAmount = parklotAmount;
+        this.parklotLng = parklotLng;
+        this.parklotLat = parklotLat;
+        this.parklotDescription = parklotDescription;
+    }
+
+    /**
+     * 全部参数
+     * @param parklotName
+     * @param distance
+     * @param time
+     * @param noParkNum
+     * @param noParkRate
+     * @param parklotAmount
+     * @param parklotLng
+     * @param parklotLat
+     * @param parklotDescription
+     */
     public ResultParklotInfo(String parklotName, int distance, int time, int noParkNum, double noParkRate, int parklotAmount, String parklotLng, String parklotLat, String parklotDescription)
     {
         this.parklotName = parklotName;
