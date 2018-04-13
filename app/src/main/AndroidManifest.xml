@@ -27,34 +27,11 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- 摄影机 -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- QQ登录 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-    <!-- 这个权限用于进行网络定位-->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <!-- 这个权限用于访问GPS定位-->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <!-- 这个权限用于获取wifi的获取权限，wifi信息会用来进行网络定位-->
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <!-- SD卡读取权限，用户写入离线定位数据-->
-    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
-
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    //获取设备网络状态，禁用后无法获取网络状态
-    <uses-permission android:name="android.permission.INTERNET"/>
-    //网络权限，当禁用后，无法进行检索等相关业务
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-    //读取设备硬件信息，统计数据
-    <uses-permission android:name="com.android.launcher.permission.READ_SETTINGS"/>
-    //读取系统信息，包含系统版本等信息，用作统计
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    //获取设备的网络状态，鉴权所需网络代理
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    //允许sd卡写权限，需写入地图数据，禁用后无法显示地图
-    <uses-permission android:name="android.permission.WRITE_SETTINGS"/>
-    //获取统计数据
-    <uses-permission android:name="android.permission.GET_TASKS"/>
-    //鉴权所需该权限获取进程列表
-    <uses-permission android:name="android.permission.CAMERA"/>
-    //使用步行AR导航，配置Camera权限
 
     <application
         android:allowBackup="true"
@@ -74,13 +51,49 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".BNDemoGuideActivity"></activity>
+        <activity
+            android:name=".BNDemoGuideActivity">
+        </activity>
+
+        <activity
+            android:name=".wxapi.WXEntryActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <!--这里应该写 APP_ID
+                <data android:scheme=" "/>-->
+            </intent-filter>
+        </activity>
 
         <service
             android:name="com.baidu.location.f"
             android:enabled="true"
             android:process=":remote">
         </service>
+
+        <!-- QQ登录配置 start -->
+        <activity
+            android:name="com.tencent.tauth.AuthActivity"
+            android:noHistory="true"
+            android:launchMode="singleTask" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tencent1106834232" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.tencent.connect.common.AssistActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:screenOrientation="behind"
+
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <!-- QQ登录配置完成 end -->
 
     </application>
 

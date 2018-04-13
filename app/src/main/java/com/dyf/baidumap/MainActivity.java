@@ -6,19 +6,25 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -52,6 +58,23 @@ import com.dyf.model.ResultParklotInfo;
 import com.dyf.utils.Constant;
 import com.dyf.utils.Convert;
 import com.dyf.utils.SendRequest;
+import com.dyf.utils.SysoUtils;
+import com.dyf.utils.ToastShow;
+import com.dyf.utils.Util;
+import com.tencent.connect.UserInfo;
+import com.tencent.connect.common.Constants;
+import com.tencent.mm.sdk.openapi.IWXAPI;
+import com.tencent.mm.sdk.openapi.WXAPIFactory;
+import com.tencent.open.SocialConstants;
+import com.tencent.tauth.IUiListener;
+import com.tencent.tauth.Tencent;
+import com.tencent.tauth.UiError;
+
+import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 import java.io.File;
 import java.util.ArrayList;
@@ -60,8 +83,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class MainActivity extends AppCompatActivity
-{
+public class MainActivity extends AppCompatActivity {
     private MapView mMapView;
     private BaiduMap mBaiduMap;
     private Context context;
@@ -74,10 +96,11 @@ public class MainActivity extends AppCompatActivity
     //导航时的起点和终点
     private LatLng mLastLocationData;
     private LatLng mDestLocationData;
-    //分别是我在哪，模拟导航，开始导航三个按钮
+    //分别是我在哪，模拟导航，开始导航，登录 四个按钮
     private Button mBtnLocation;
     private Button mBtnMockNav;
     private Button mBtnRealNav;
+    private Button mBtnLogin;
     //回到原位置变量，我的位置的经纬度
     private double mLatitude;
     private double mLongtitude;
@@ -110,9 +133,28 @@ public class MainActivity extends AppCompatActivity
     private boolean hasInitSuccess = false;
     private boolean hasRequestComAuth = false;
 
+    //微信 登录 相关
+    //APP_ID
+    private static final String APP_ID = Constant.WEIXIN_APP_ID;
+    // IWXAPI 是 第三方 APP 和 微信通信 的 openapi 接口
+    private IWXAPI api;
+
+    // QQ登录
+    public static Tencent mTencent;
+    private static final String TAG = MainActivity.class.getName();
+    public static String QQAPP_ID = "1106834232";
+    private Button mNewLoginButton;
+    //private Button mServerSideLoginBtn;
+    private TextView mUserInfo;
+    private ImageView mUserLogo;
+    private UserInfo mInfo;
+    private EditText mEtAppid = null;
+    private static Intent mPrizeIntent = null;
+    private static boolean isServerSideLogin = false;
+
+
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //去掉顶部标题栏,不过好像不好用，和继承自activity还是AppCompatActivity好像有关系
         //requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -129,13 +171,13 @@ public class MainActivity extends AppCompatActivity
         initLocation();
         //初始化覆盖物图标
         initMarker();
+        //注册 微信
+        regToWx();
 
         //通过长按设置终点位置
-        mBaiduMap.setOnMapLongClickListener(new BaiduMap.OnMapLongClickListener()
-        {
+        mBaiduMap.setOnMapLongClickListener(new BaiduMap.OnMapLongClickListener() {
             @Override
-            public void onMapLongClick(LatLng latLng)
-            {
+            public void onMapLongClick(LatLng latLng) {
                 //用户长按设置之后，给用户一个提示
                 Toast.makeText(MainActivity.this, "设置目的地成功", Toast.LENGTH_SHORT).show();
                 //设置终点的位置
@@ -145,12 +187,10 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        //点击我在哪mBtnLocation按钮，地图移动到我的位置
-        mBtnLocation.setOnClickListener(new View.OnClickListener()
-        {
+        //点击 我在哪 mBtnLocation 按钮，地图移动到我的位置
+        mBtnLocation.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 //设置点击我的位置时，地图放大比例
                 mBaiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(Constant.BASIC_ZOOM));
                 //设置地图中心点为用户位置
@@ -161,14 +201,11 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        //点击模拟导航按钮
-        mBtnMockNav.setOnClickListener(new View.OnClickListener()
-        {
+        //点击 模拟 导航 按钮
+        mBtnMockNav.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
-                if (mDestLocationData == null)
-                {
+            public void onClick(View v) {
+                if (mDestLocationData == null) {
                     Toast.makeText(MainActivity.this, "长按地图设置目标地点", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -176,14 +213,11 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        //点击开始导航按钮
-        mBtnRealNav.setOnClickListener(new View.OnClickListener()
-        {
+        //点击 开始 导航 按钮
+        mBtnRealNav.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
-                if (mDestLocationData == null)
-                {
+            public void onClick(View v) {
+                if (mDestLocationData == null) {
                     Toast.makeText(MainActivity.this, "长按地图设置目标地点", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -191,14 +225,22 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        //点击 覆盖物 图标
-        mBaiduMap.setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener()
-        {
+        //点击 登录 按钮
+        mBtnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onMarkerClick(Marker marker)
-            {
+            public void onClick(View v) {
+                ToastShow.showToastMsg(MainActivity.this, "调用QQ登录");
+
+                qqLogin();
+            }
+        });
+
+        //点击 覆盖物 图标
+        mBaiduMap.setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
                 Bundle extraInfo = marker.getExtraInfo();
-                ResultParklotInfo resultParklotInfo  = (ResultParklotInfo) extraInfo.getSerializable("result");
+                ResultParklotInfo resultParklotInfo = (ResultParklotInfo) extraInfo.getSerializable("result");
                 //ImageView iv = (ImageView) mMarkerLy.findViewById(R.id.id_info_img);
                 TextView distance = (TextView) mMarkerLy.findViewById(R.id.id_info_distance);
                 TextView name = (TextView) mMarkerLy.findViewById(R.id.id_info_name);
@@ -246,11 +288,9 @@ public class MainActivity extends AppCompatActivity
         });
 
         //点击地图其他地方的时候，展示信息消失
-        mBaiduMap.setOnMapClickListener(new BaiduMap.OnMapClickListener()
-        {
+        mBaiduMap.setOnMapClickListener(new BaiduMap.OnMapClickListener() {
             @Override
-            public void onMapClick(LatLng latLng)
-            {
+            public void onMapClick(LatLng latLng) {
                 //展示信息消失
                 mMarkerLy.setVisibility(View.GONE);
                 //图标上方文本信息消失
@@ -258,35 +298,281 @@ public class MainActivity extends AppCompatActivity
             }
 
             @Override
-            public boolean onMapPoiClick(MapPoi mapPoi)
-            {
+            public boolean onMapPoiClick(MapPoi mapPoi) {
                 return false;
             }
         });
 
         //导航部分，copy的导航demo，初始化导航相关
-        if (initDirs())
-        {
+        if (initDirs()) {
             initNavi();
         }
     }
 
-    //导航部分，copy的导航demo，初始化导航相关
-    private boolean initDirs()
+    /**
+     * 微信 注册
+     */
+    private void regToWx() {
+        // 通过 WXAPIFactory 工厂，获取 IWXAPI 的 实例
+        api = WXAPIFactory.createWXAPI(this, APP_ID, true);
+        // 将 应用 的 APP_ID 注册 到 微信
+        api.registerApp(APP_ID);
+    }
+
+    public static void initOpenidAndToken(Object value) {
+        try {
+            SysoUtils.print(" sys initOpenidAndToken方法");
+            JSONObject jsonObject = (JSONObject) value;
+            String token = jsonObject.getString(Constants.PARAM_ACCESS_TOKEN);
+            String expires = jsonObject.getString(Constants.PARAM_EXPIRES_IN);
+            String openId = jsonObject.getString(Constants.PARAM_OPEN_ID);
+            if (!TextUtils.isEmpty(token) && !TextUtils.isEmpty(expires)
+                    && !TextUtils.isEmpty(openId)) {
+                mTencent.setAccessToken(token, expires);
+                mTencent.setOpenId(openId);
+            }
+        } catch (Exception e) {
+        }
+    }
+
+    // QQ登录的loginlistener
+
+    IUiListener loginListener = new BaseUiListener() {
+        @Override
+        protected void doComplete(Object values) {
+            SysoUtils.print("sys login doComplete:" + values.toString());
+
+            Log.d("SDKQQAgentPref", "AuthorSwitch_SDK:" + SystemClock.elapsedRealtime());
+            initOpenidAndToken(values);
+            updateUserInfo();
+            //updateLoginButton();
+        }
+    };
+
+    private void updateUserInfo() {
+        if (mTencent != null && mTencent.isSessionValid()) {
+            IUiListener listener = new IUiListener() {
+
+                @Override
+                public void onError(UiError e) {
+
+                }
+
+                @Override
+                public void onComplete(final Object response) {
+                    Message msg = new Message();
+                    msg.obj = response;
+                    msg.what = 0;
+                    mHandler.sendMessage(msg);
+                    new Thread() {
+
+                        @Override
+                        public void run() {
+                            JSONObject json = (JSONObject) response;
+                            if (json.has("figureurl")) {
+                                Bitmap bitmap = null;
+                                try {
+                                    bitmap = Util.getbitmap(json.getString("figureurl_qq_2"));
+                                } catch (JSONException e) {
+
+                                }
+                                Message msg = new Message();
+                                msg.obj = bitmap;
+                                msg.what = 1;
+                                mHandler.sendMessage(msg);
+                            }
+                        }
+
+                    }.start();
+                }
+
+                @Override
+                public void onCancel() {
+
+                }
+            };
+            mInfo = new UserInfo(this, mTencent.getQQToken());
+            mInfo.getUserInfo(listener);
+
+        } else {
+            mUserInfo.setText("");
+            mUserInfo.setVisibility(android.view.View.GONE);
+            //mUserLogo.setVisibility(android.view.View.GONE);
+        }
+    }
+
+    Handler mHandler = new Handler() {
+
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == 0) {
+                JSONObject response = (JSONObject) msg.obj;
+                if (response.has("nickname")) {
+                    try {
+                        //mUserInfo.setVisibility(android.view.View.VISIBLE);
+                        //mUserInfo.setText(response.getString("nickname"));
+                        String username = response.getString("nickname");
+                        ToastShow.showToastMsg(MainActivity.this,"欢迎"+username);
+                        // 将用户名称以类似session的形式保存
+                        SharedPreferences.Editor shareData = getSharedPreferences("data",0).edit();
+                        shareData.putString("item",username);
+                        SysoUtils.print(" sys "+shareData.commit());;
+
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }else if(msg.what == 1){
+                Bitmap bitmap = (Bitmap)msg.obj;
+                //mUserLogo.setImageBitmap(bitmap);
+                //mUserLogo.setVisibility(android.view.View.VISIBLE);
+            }
+        }
+
+    };
+
+
+    private class BaseUiListener implements IUiListener {
+
+
+        @Override
+        public void onComplete(Object response) {
+            doComplete(response);
+        }
+
+
+        protected void doComplete(Object values) {
+
+        }
+
+        @Override
+
+        public void onError(UiError e) {
+            SysoUtils.print("sys cancel"+ e.errorCode + ", msg:"
+                    + e.errorMessage + ", detail:" + e.errorDetail);
+        }
+
+        @Override
+
+        public void onCancel() {
+            SysoUtils.print("sys cancel");
+        }
+    }
+
+    /*private class BaseUiListener implements IUiListener {
+
+        @Override
+        public void onComplete(Object response) {
+            if (null == response) {
+                Util.showResultDialog(MainActivity.this, "返回为空", "登录失败");
+                return;
+            }
+            JSONObject jsonResponse = (JSONObject) response;
+            if (null != jsonResponse && jsonResponse.length() == 0) {
+                Util.showResultDialog(MainActivity.this, "返回为空", "登录失败");
+                return;
+            }
+            Util.showResultDialog(MainActivity.this, response.toString(), "登录成功");
+            // 有奖分享处理
+            //handlePrizeShare();
+            doComplete((JSONObject)response);
+        }
+
+        protected void doComplete(JSONObject values) {       }
+
+        @Override
+        public void onError(UiError e) {
+            Util.toastMessage(MainActivity.this, "onError: " + e.errorDetail);
+            Util.dismissDialog();
+        }
+
+        @Override
+        public void onCancel() {
+            Util.toastMessage(MainActivity.this, "onCancel: ");
+            Util.dismissDialog();
+            if (isServerSideLogin) {
+                isServerSideLogin = false;
+            }
+        }
+    }*/
+
+    /**
+     * 点击 登录 按钮，调用 微信 登录,通过下面这个方法就可以弹出微信第三方授权页面了，点击确认即可。
+     * 然后进入WXEntryActivity页面onResp函数
+     */
+    private void qqLogin() {
+        SysoUtils.print("sys 进入QQlogin方法");
+        mTencent = Tencent.createInstance(QQAPP_ID, MainActivity.this);
+        SSLSocketFactory.getSocketFactory().setHostnameVerifier(new AllowAllHostnameVerifier());
+        if (!mTencent.isSessionValid()) {
+            SysoUtils.print("sys login第一个if");
+            mTencent.login(this, "all", loginListener);
+            isServerSideLogin = false;
+            Log.d("SDKQQAgentPref", "FirstLaunch_SDK:" + SystemClock.elapsedRealtime());
+        } else {
+            if (isServerSideLogin) { // Server-Side 模式的登陆, 先退出，再进行SSO登陆
+                SysoUtils.print("sys login第二个if");
+                mTencent.logout(this);
+                mTencent.login(this, "all", loginListener);
+                isServerSideLogin = false;
+                Log.d("SDKQQAgentPref", "FirstLaunch_SDK:" + SystemClock.elapsedRealtime());
+                return;
+            }
+            mTencent.logout(this);
+            //updateUserInfo();
+            //updateLoginButton();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //super.onActivityResult(requestCode, resultCode, data);
+        //mTencent.onActivityResult(requestCode, resultCode, data);
+        Tencent.onActivityResultData(requestCode, resultCode, data, loginListener);
+
+        if (requestCode == Constants.REQUEST_API) {
+            if (resultCode == Constants.REQUEST_LOGIN) {
+                Tencent.handleResultData(data, loginListener);
+            }
+        }
+    }
+
+    // 异步获取QQ用户信息
+    /*public void getUserInfo()
     {
-        mSDCardPath = getSdcardDir();
-        if (mSDCardPath == null)
+        mTencent.requestAsync(Constants.GRAPH_SIMPLE_USER_INFO, null,
+                Constants.HTTP_GET, new BaseApiListener("get_simple_userinfo", false), null);
+    }*/
+
+    /*{
+        // send oauth request
+        SendAuth.Req req = new SendAuth.Req();
+        req.scope = "snsapi_userinfo";
+        req.state = "wechat_sdk_demo_test";
+        api.sendReq(req);
+        *//*
         {
+    // send oauth request
+    Final SendAuth.Req req = new SendAuth.Req();
+    req.scope = "snsapi_userinfo";
+    req.state = "wechat_sdk_demo_test";
+    api.sendReq(req);
+}
+         *//*
+    }*/
+
+    //导航部分，copy的导航demo，初始化导航相关
+    private boolean initDirs() {
+        mSDCardPath = getSdcardDir();
+        if (mSDCardPath == null) {
             return false;
         }
         File f = new File(mSDCardPath, APP_FOLDER_NAME);
-        if (!f.exists())
-        {
-            try
-            {
+        if (!f.exists()) {
+            try {
                 f.mkdir();
-            } catch (Exception e)
-            {
+            } catch (Exception e) {
                 e.printStackTrace();
                 return false;
             }
@@ -299,20 +585,15 @@ public class MainActivity extends AppCompatActivity
     /**
      * 内部TTS播报状态回传handler
      */
-    private Handler ttsHandler = new Handler()
-    {
-        public void handleMessage(Message msg)
-        {
+    private Handler ttsHandler = new Handler() {
+        public void handleMessage(Message msg) {
             int type = msg.what;
-            switch (type)
-            {
-                case BaiduNaviManager.TTSPlayMsgType.PLAY_START_MSG:
-                {
+            switch (type) {
+                case BaiduNaviManager.TTSPlayMsgType.PLAY_START_MSG: {
                     showToastMsg("Handler : TTS play start");
                     break;
                 }
-                case BaiduNaviManager.TTSPlayMsgType.PLAY_END_MSG:
-                {
+                case BaiduNaviManager.TTSPlayMsgType.PLAY_END_MSG: {
                     showToastMsg("Handler : TTS play end");
                     break;
                 }
@@ -325,55 +606,43 @@ public class MainActivity extends AppCompatActivity
     /**
      * 内部TTS播报状态回调接口
      */
-    private BaiduNaviManager.TTSPlayStateListener ttsPlayStateListener = new BaiduNaviManager.TTSPlayStateListener()
-    {
+    private BaiduNaviManager.TTSPlayStateListener ttsPlayStateListener = new BaiduNaviManager.TTSPlayStateListener() {
 
         @Override
-        public void playEnd()
-        {
+        public void playEnd() {
             showToastMsg("TTSPlayStateListener : TTS play end");
         }
 
         @Override
-        public void playStart()
-        {
+        public void playStart() {
             showToastMsg("TTSPlayStateListener : TTS play start");
         }
     };
 
-    public void showToastMsg(final String msg)
-    {
-        MainActivity.this.runOnUiThread(new Runnable()
-        {
+    public void showToastMsg(final String msg) {
+        MainActivity.this.runOnUiThread(new Runnable() {
 
             @Override
-            public void run()
-            {
+            public void run() {
                 Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private boolean hasBasePhoneAuth()
-    {
+    private boolean hasBasePhoneAuth() {
         PackageManager pm = this.getPackageManager();
-        for (String auth : authBaseArr)
-        {
-            if (pm.checkPermission(auth, this.getPackageName()) != PackageManager.PERMISSION_GRANTED)
-            {
+        for (String auth : authBaseArr) {
+            if (pm.checkPermission(auth, this.getPackageName()) != PackageManager.PERMISSION_GRANTED) {
                 return false;
             }
         }
         return true;
     }
 
-    private boolean hasCompletePhoneAuth()
-    {
+    private boolean hasCompletePhoneAuth() {
         PackageManager pm = this.getPackageManager();
-        for (String auth : authComArr)
-        {
-            if (pm.checkPermission(auth, this.getPackageName()) != PackageManager.PERMISSION_GRANTED)
-            {
+        for (String auth : authComArr) {
+            if (pm.checkPermission(auth, this.getPackageName()) != PackageManager.PERMISSION_GRANTED) {
                 return false;
             }
         }
@@ -383,66 +652,52 @@ public class MainActivity extends AppCompatActivity
     /**
      * 初始化导航
      */
-    private void initNavi()
-    {
+    private void initNavi() {
         BNOuterTTSPlayerCallback ttsCallback = null;
         // 申请权限
-        if (android.os.Build.VERSION.SDK_INT >= 23)
-        {
-            if (!hasBasePhoneAuth())
-            {
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            if (!hasBasePhoneAuth()) {
                 this.requestPermissions(authBaseArr, authBaseRequestCode);
                 return;
             }
         }
 
-        BaiduNaviManager.getInstance().init(this, mSDCardPath, APP_FOLDER_NAME, new BaiduNaviManager.NaviInitListener()
-        {
+        BaiduNaviManager.getInstance().init(this, mSDCardPath, APP_FOLDER_NAME, new BaiduNaviManager.NaviInitListener() {
             @Override
-            public void onAuthResult(int status, String msg)
-            {
-                if (0 == status)
-                {
+            public void onAuthResult(int status, String msg) {
+                if (0 == status) {
                     authinfo = "key校验成功!";
-                } else
-                {
+                } else {
                     authinfo = "key校验失败, " + msg;
                 }
-                MainActivity.this.runOnUiThread(new Runnable()
-                {
+                MainActivity.this.runOnUiThread(new Runnable() {
 
                     @Override
-                    public void run()
-                    {
+                    public void run() {
                         Toast.makeText(MainActivity.this, authinfo, Toast.LENGTH_LONG).show();
                     }
                 });
             }
 
-            public void initSuccess()
-            {
+            public void initSuccess() {
                 Toast.makeText(MainActivity.this, "百度导航引擎初始化成功", Toast.LENGTH_SHORT).show();
                 hasInitSuccess = true;
                 initSetting();
             }
 
-            public void initStart()
-            {
+            public void initStart() {
                 Toast.makeText(MainActivity.this, "百度导航引擎初始化开始", Toast.LENGTH_SHORT).show();
             }
 
-            public void initFailed()
-            {
+            public void initFailed() {
                 Toast.makeText(MainActivity.this, "百度导航引擎初始化失败", Toast.LENGTH_SHORT).show();
             }
 
         }, null, ttsHandler, ttsPlayStateListener);
     }
 
-    private String getSdcardDir()
-    {
-        if (Environment.getExternalStorageState().equalsIgnoreCase(Environment.MEDIA_MOUNTED))
-        {
+    private String getSdcardDir() {
+        if (Environment.getExternalStorageState().equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
             return Environment.getExternalStorageDirectory().toString();
         }
         return null;
@@ -453,27 +708,21 @@ public class MainActivity extends AppCompatActivity
     /**
      * @param mock 设置是否是真实导航，false为模拟，TRUE为真实导航
      */
-    private void routeplanToNavi(boolean mock)
-    {
+    private void routeplanToNavi(boolean mock) {
         BNRoutePlanNode.CoordinateType coType = BNRoutePlanNode.CoordinateType.BD09LL;
         mCoordinateType = coType;
-        if (!hasInitSuccess)
-        {
+        if (!hasInitSuccess) {
             Toast.makeText(MainActivity.this, "还未初始化!", Toast.LENGTH_SHORT).show();
         }
         // 权限申请
-        if (android.os.Build.VERSION.SDK_INT >= 23)
-        {
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
             // 保证导航功能完备
-            if (!hasCompletePhoneAuth())
-            {
-                if (!hasRequestComAuth)
-                {
+            if (!hasCompletePhoneAuth()) {
+                if (!hasRequestComAuth) {
                     hasRequestComAuth = true;
                     this.requestPermissions(authComArr, authComRequestCode);
                     return;
-                } else
-                {
+                } else {
                     Toast.makeText(MainActivity.this, "没有完备的权限!", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -493,8 +742,7 @@ public class MainActivity extends AppCompatActivity
         sNode = new BNRoutePlanNode(mLastLocationData.longitude, mLastLocationData.latitude, "我的地点", null, coType);
         eNode = new BNRoutePlanNode(mDestLocationData.longitude, mDestLocationData.latitude, "目标地点", null, coType);
 
-        if (sNode != null && eNode != null)
-        {
+        if (sNode != null && eNode != null) {
             List<BNRoutePlanNode> list = new ArrayList<BNRoutePlanNode>();
             list.add(sNode);
             list.add(eNode);
@@ -505,33 +753,28 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    BaiduNaviManager.NavEventListener eventListerner = new BaiduNaviManager.NavEventListener()
-    {
+    BaiduNaviManager.NavEventListener eventListerner = new BaiduNaviManager.NavEventListener() {
 
         @Override
-        public void onCommonEventCall(int what, int arg1, int arg2, Bundle bundle)
-        {
+        public void onCommonEventCall(int what, int arg1, int arg2, Bundle bundle) {
             BNEventHandler.getInstance().handleNaviEvent(what, arg1, arg2, bundle);
         }
     };
 
-    public class DemoRoutePlanListener implements BaiduNaviManager.RoutePlanListener
-    {
+    public class DemoRoutePlanListener implements BaiduNaviManager.RoutePlanListener {
         private BNRoutePlanNode mBNRoutePlanNode = null;
-        public DemoRoutePlanListener(BNRoutePlanNode node)
-        {
+
+        public DemoRoutePlanListener(BNRoutePlanNode node) {
             mBNRoutePlanNode = node;
         }
+
         @Override
-        public void onJumpToNavigator()
-        {
+        public void onJumpToNavigator() {
             /*
              * 设置途径点以及resetEndNode会回调该接口
              */
-            for (Activity ac : activityList)
-            {
-                if (ac.getClass().getName().endsWith("BNDemoGuideActivity"))
-                {
+            for (Activity ac : activityList) {
+                if (ac.getClass().getName().endsWith("BNDemoGuideActivity")) {
                     return;
                 }
             }
@@ -544,15 +787,13 @@ public class MainActivity extends AppCompatActivity
         }
 
         @Override
-        public void onRoutePlanFailed()
-        {
+        public void onRoutePlanFailed() {
             Log.e("TAG", "算路失败");
             Toast.makeText(MainActivity.this, "算路失败", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void initSetting()
-    {
+    private void initSetting() {
         // BNaviSettingManager.setDayNightMode(BNaviSettingManager.DayNightMode.DAY_NIGHT_MODE_DAY);
         BNaviSettingManager
                 .setShowTotalRoadConditionBar(BNaviSettingManager.PreViewRoadCondition.ROAD_CONDITION_BAR_SHOW_ON);
@@ -567,8 +808,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     //给终点设置一下图标，设置终点信息
-    private void addDestInfoOverlay(LatLng destInfo)
-    {
+    private void addDestInfoOverlay(LatLng destInfo) {
         //清除原来的
         mBaiduMap.clear();
         //设置地点覆盖物的信息
@@ -579,20 +819,20 @@ public class MainActivity extends AppCompatActivity
     }
 
     //初始化覆盖物图标
-    private void initMarker()
-    {
+    private void initMarker() {
         mMarker = BitmapDescriptorFactory.fromResource(R.mipmap.marker);
         mMarkerLy = (RelativeLayout) findViewById(R.id.id_marker_ly);
     }
 
     //初始化控件
-    private void initView()
-    {
+    private void initView() {
         bar = (ProgressBar) findViewById(R.id.id_pgb_main);
         bar.setVisibility(View.GONE);
         mBtnLocation = (Button) findViewById(R.id.id_btn_location);
         mBtnMockNav = (Button) findViewById(R.id.id_btn_mocknav);
         mBtnRealNav = (Button) findViewById(R.id.id_btn_realnav);
+        //登录 按钮
+        mBtnLogin = (Button) findViewById(R.id.id_btn_login);
         mMapView = (MapView) findViewById(R.id.id_bmapView);
         mBaiduMap = mMapView.getMap();
         //设置地图初始放大比例
@@ -601,8 +841,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     //初始化定位
-    private void initLocation()
-    {
+    private void initLocation() {
         //定位模式默认使用普通模式
         mLocationMode = MyLocationConfiguration.LocationMode.NORMAL;
         mLocationClient = new LocationClient(this);
@@ -623,11 +862,9 @@ public class MainActivity extends AppCompatActivity
         myOrientationListener = new MyOrientationListener(context);
 
         //当方向发生改变的时候，更新地图上方向图标的位置
-        myOrientationListener.setOnOrientationListener(new MyOrientationListener.OnOrientationListener()
-        {
+        myOrientationListener.setOnOrientationListener(new MyOrientationListener.OnOrientationListener() {
             @Override
-            public void onOrientationChanged(float x)
-            {
+            public void onOrientationChanged(float x) {
                 mCurrentX = x;
             }
         });
@@ -635,17 +872,14 @@ public class MainActivity extends AppCompatActivity
 
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
+    public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
-        switch (item.getItemId())
-        {
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
             //普通地图
             /*case R.id.id_map_common:
                 mBaiduMap.setMapType(BaiduMap.MAP_TYPE_NORMAL);
@@ -658,12 +892,10 @@ public class MainActivity extends AppCompatActivity
 
             //开启关闭实时交通
             case R.id.id_map_traffic:
-                if (mBaiduMap.isTrafficEnabled())
-                {
+                if (mBaiduMap.isTrafficEnabled()) {
                     mBaiduMap.setTrafficEnabled(false);
                     item.setTitle("开启实时交通");
-                } else
-                {
+                } else {
                     mBaiduMap.setTrafficEnabled(true);
                     item.setTitle("关闭实时交通");
                 }
@@ -712,6 +944,12 @@ public class MainActivity extends AppCompatActivity
             case R.id.id_search_bynoparknum:
                 searchBestParklotInfo("noParkNum", mLongtitude, mLatitude);
                 break;
+            // 测试sharepreferences是否能用
+            case R.id.id_testusername:
+                SharedPreferences shareData = getSharedPreferences("data",0);
+                String data = shareData.getString("item",null);
+                ToastShow.showToastMsg(MainActivity.this,"欢迎："+data);
+                break;
 
             default:
                 break;
@@ -722,25 +960,21 @@ public class MainActivity extends AppCompatActivity
     /**
      * 根据条件获取合适停车场的handler
      */
-    private Handler getBestHandler = new Handler()
-    {
+    private Handler getBestHandler = new Handler() {
         @Override
-        public void handleMessage(Message msg)
-        {
+        public void handleMessage(Message msg) {
             int type = msg.what;
             List<Map<String, String>> listInfos = (List<Map<String, String>>) msg.obj;
-            switch (type)
-            {
+            switch (type) {
                 case 1:
                     bar.setVisibility(View.GONE);
-                    if (listInfos.size()>0)
-                    {
+                    if (listInfos.size() > 0) {
                         showAlertDialog("提示", listInfos);
-                    }else {
+                    } else {
                         new AlertDialog.Builder(MainActivity.this)
                                 .setTitle("提示")
                                 .setMessage("没有获取到停车场信息")
-                                .setPositiveButton("确定",null)
+                                .setPositiveButton("确定", null)
                                 .show();
                     }
 
@@ -752,43 +986,37 @@ public class MainActivity extends AppCompatActivity
     /**
      * 获取全部停车场信息的handler
      */
-    private Handler getAllHandler = new Handler()
-    {
+    private Handler getAllHandler = new Handler() {
         @Override
-        public void handleMessage(Message msg)
-        {
+        public void handleMessage(Message msg) {
             int type = msg.what;
-            switch (type)
-            {
+            switch (type) {
                 case 1:
                     bar.setVisibility(View.GONE);
                     mBaiduMap.clear();
                     LatLng latLng = null;
                     Marker marker = null;
                     OverlayOptions options;
-                    List<Map<String,String>> listItems = (List<Map<String, String>>) msg.obj;
+                    List<Map<String, String>> listItems = (List<Map<String, String>>) msg.obj;
                     List<ResultParklotInfo> resultParklotInfos = new ArrayList<ResultParklotInfo>();
-                    if(listItems.size()>0)
-                    {
-                        for (int i = 0; i<listItems.size();i++)
-                        {
+                    if (listItems.size() > 0) {
+                        for (int i = 0; i < listItems.size(); i++) {
                             String parklotName = listItems.get(i).get("parklotName");
-                            int distance = Integer.parseInt(listItems.get(i).get("distance")) ; // 车辆距离停车场的距离，单位 米
-                            int time = Integer.parseInt( listItems.get(i).get("time"));// 车辆行驶到停车场所需的时间
-                            int noParkNum = Integer.parseInt( listItems.get(i).get("noParkNum")); //停车场的未停车数
+                            int distance = Integer.parseInt(listItems.get(i).get("distance")); // 车辆距离停车场的距离，单位 米
+                            int time = Integer.parseInt(listItems.get(i).get("time"));// 车辆行驶到停车场所需的时间
+                            int noParkNum = Integer.parseInt(listItems.get(i).get("noParkNum")); //停车场的未停车数
                             double noParkRate = Double.parseDouble(listItems.get(i).get("noParkRate")); //停车场的未停车率
                             int parklotAmount = Integer.parseInt(listItems.get(i).get("parklotAmount")); // 停车场车位数量
                             String parklotLng = listItems.get(i).get("parklotLng"); // 停车场位置精度
                             String parklotLat = listItems.get(i).get("parklotLat");// 停车场位置纬度
                             String parklotDescription = listItems.get(i).get("parklotDescription");// 停车场描述
-                            ResultParklotInfo resultParklotInfo = new ResultParklotInfo(parklotName,distance,time,noParkNum,parklotAmount,parklotLng,parklotLat,parklotDescription);
+                            ResultParklotInfo resultParklotInfo = new ResultParklotInfo(parklotName, distance, time, noParkNum, parklotAmount, parklotLng, parklotLat, parklotDescription);
                             resultParklotInfos.add(resultParklotInfo);
                         }
 
-                        for (ResultParklotInfo result : resultParklotInfos)
-                        {
+                        for (ResultParklotInfo result : resultParklotInfos) {
                             //经纬度
-                            latLng = new LatLng(Double.parseDouble(result.getParklotLat()),Double.parseDouble(result.getParklotLng()));
+                            latLng = new LatLng(Double.parseDouble(result.getParklotLat()), Double.parseDouble(result.getParklotLng()));
                             //图标
                             options = new MarkerOptions()//
                                     .position(latLng)//指定marker的地图上的位置
@@ -797,14 +1025,14 @@ public class MainActivity extends AppCompatActivity
                             //实例化marker
                             marker = (Marker) mBaiduMap.addOverlay(options);
                             Bundle arg0 = new Bundle();
-                            arg0.putSerializable("result",result);
+                            arg0.putSerializable("result", result);
                             marker.setExtraInfo(arg0);
                         }
                     }
 
                     //每次添加完图层之后，把地图移动到第一个或者最后一个图层的位置，不然图标如果和所在位置差的远，看不到
                     //newLatLng方法里面的参数写latlng，就是移动到第一个或者最后一个图层的位置，我这里还让地图以我为中心
-                    MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(new LatLng(mLatitude,mLongtitude));
+                    MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(new LatLng(mLatitude, mLongtitude));
                     mBaiduMap.setMapStatus(msu);
                     break;
             }
@@ -817,12 +1045,10 @@ public class MainActivity extends AppCompatActivity
      * @param title 对话框标题
      * @param body  对话框要显示的内容
      */
-    private void showAlertDialog(String title, final List<Map<String, String>> body)
-    {
+    private void showAlertDialog(String title, final List<Map<String, String>> body) {
         final int num = 0;
         int time = Integer.parseInt(body.get(num).get("time")) / 60;
-        if (time < 1)
-        {
+        if (time < 1) {
             time = 1;
         }
 
@@ -836,11 +1062,9 @@ public class MainActivity extends AppCompatActivity
         alertDialog.setTitle(title);  //设置对话框的标题
         alertDialog.setMessage(message);  //设置对话框要显示的内容
         //添加确定，取消按钮，先添加 确定  按钮
-        alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "确定", new DialogInterface.OnClickListener()
-        {
+        alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "确定", new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
+            public void onClick(DialogInterface dialog, int which) {
                 double destLng = Double.parseDouble(body.get(num).get("parklotLng"));
                 double destLat = Double.parseDouble(body.get(num).get("parklotLat"));
                 //设置终点的位置
@@ -853,11 +1077,9 @@ public class MainActivity extends AppCompatActivity
             }
         });
         //添加取消按钮
-        alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "取消", new DialogInterface.OnClickListener()
-        {
+        alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "取消", new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
+            public void onClick(DialogInterface dialog, int which) {
             }
         });
         //添加（中立）下一个按钮
@@ -880,14 +1102,11 @@ public class MainActivity extends AppCompatActivity
      * @param mLongtitude 个人经度信息
      * @param mLatitude   个人纬度信息
      */
-    private void searchBestParklotInfo(final String condi, final double mLongtitude, final double mLatitude)
-    {
+    private void searchBestParklotInfo(final String condi, final double mLongtitude, final double mLatitude) {
         bar.setVisibility(View.VISIBLE);
-        new Thread()
-        {
+        new Thread() {
             @Override
-            public void run()
-            {
+            public void run() {
                 Message message = new Message();
                 message.what = 1;
                 String selfLng = Convert.doubleToString(mLongtitude);
@@ -902,14 +1121,11 @@ public class MainActivity extends AppCompatActivity
     /**
      * 添加覆盖物
      */
-    private void addOverlays()
-    {
+    private void addOverlays() {
         bar.setVisibility(View.VISIBLE);
-        new Thread()
-        {
+        new Thread() {
             @Override
-            public void run()
-            {
+            public void run() {
                 Message message = new Message();
                 message.what = 1;
                 String selfLng = Convert.doubleToString(mLongtitude);
@@ -925,11 +1141,9 @@ public class MainActivity extends AppCompatActivity
     /**
      * 定位到我的位置
      */
-    private class MyLocationListener implements BDLocationListener
-    {
+    private class MyLocationListener implements BDLocationListener {
         @Override
-        public void onReceiveLocation(BDLocation bdLocation)
-        {
+        public void onReceiveLocation(BDLocation bdLocation) {
             MyLocationData data = new MyLocationData.Builder()//
                     .direction(mCurrentX)//定位成功之后，才会更新方向
                     .accuracy(bdLocation.getRadius())//
@@ -945,8 +1159,7 @@ public class MainActivity extends AppCompatActivity
             mLatitude = bdLocation.getLatitude();
             mLongtitude = bdLocation.getLongitude();
 
-            if (isFirstIn)
-            {
+            if (isFirstIn) {
                 LatLng latLng = new LatLng(bdLocation.getLatitude(), bdLocation.getLongitude());
                 MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(latLng);
                 //地图位置使用动画效果转过去
@@ -957,19 +1170,18 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(context, bdLocation.getAddrStr(), Toast.LENGTH_LONG).show();
             }
         }
+
     }
 
 
     @Override
-    protected void onResume()
-    {
+    protected void onResume() {
         super.onResume();
         mMapView.onResume();
     }
 
     @Override
-    protected void onStart()
-    {
+    protected void onStart() {
         super.onStart();
         //开启定位
         mBaiduMap.setMyLocationEnabled(true);
@@ -980,15 +1192,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onPause()
-    {
+    protected void onPause() {
         super.onPause();
         mMapView.onPause();
     }
 
     @Override
-    protected void onStop()
-    {
+    protected void onStop() {
         super.onStop();
         //停止定位
         mBaiduMap.setMyLocationEnabled(false);
@@ -998,8 +1208,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onDestroy()
-    {
+    protected void onDestroy() {
         super.onDestroy();
         mMapView.onDestroy();
     }

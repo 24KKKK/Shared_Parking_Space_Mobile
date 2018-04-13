@@ -3,6 +3,9 @@ package com.dyf.utils;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 
+/*
+ *获取本机ip地址
+ */
 public class Inet {
 	
 	public static String getIP(){

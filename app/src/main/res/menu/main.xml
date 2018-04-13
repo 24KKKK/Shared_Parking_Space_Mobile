@@ -61,4 +61,9 @@
         app:showAsAction="never"
         android:title="@string/search_bynoparknum"/>
 
+    <item
+        android:id="@+id/id_testusername"
+        app:showAsAction="never"
+        android:title="@string/testusername"/>
+
 </menu>

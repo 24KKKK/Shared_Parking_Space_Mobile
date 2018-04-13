@@ -11,5 +11,13 @@
     <string name="search_bydistance">按距离查找</string>
     <string name="search_bytime">按时间查找</string>
     <string name="search_bynoparknum">按停车数查找</string>
+    <string name="testusername">测试用户名</string>
+    <string name="errcode_ok">0</string>
+    <string name="errcode_cancel">-2</string>
+    <string name="errcode_deny">-4</string>
+    <string name="errcode_unsupported">-5</string>
+    <string name="errcode_unknown">-6</string>
+    <string name="errcode_sentfailed">-3</string>
+    <string name="errcode_comm">-1</string>
 
 </resources>
