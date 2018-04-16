@@ -411,11 +411,13 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         //mUserInfo.setVisibility(android.view.View.VISIBLE);
                         //mUserInfo.setText(response.getString("nickname"));
-                        String username = response.getString("nickname");
-                        ToastShow.showToastMsg(MainActivity.this,"欢迎"+username);
+                        String nickname = response.getString("nickname");
+                        String openid = response.getString("openid");
+                        ToastShow.showToastMsg(MainActivity.this,"欢迎"+nickname);
                         // 将用户名称以类似session的形式保存
                         SharedPreferences.Editor shareData = getSharedPreferences("data",0).edit();
-                        shareData.putString("item",username);
+                        shareData.putString("nickname",nickname);
+                        shareData.putString("openid",openid);
                         SysoUtils.print(" sys "+shareData.commit());;
 
 
@@ -498,8 +500,7 @@ public class MainActivity extends AppCompatActivity {
     }*/
 
     /**
-     * 点击 登录 按钮，调用 微信 登录,通过下面这个方法就可以弹出微信第三方授权页面了，点击确认即可。
-     * 然后进入WXEntryActivity页面onResp函数
+     * 点击 登录 按钮，调用 QQ 登录,通过下面这个方法就可以弹出QQ第三方授权页面了，点击确认即可。
      */
     private void qqLogin() {
         SysoUtils.print("sys 进入QQlogin方法");
@@ -947,8 +948,9 @@ public class MainActivity extends AppCompatActivity {
             // 测试sharepreferences是否能用
             case R.id.id_testusername:
                 SharedPreferences shareData = getSharedPreferences("data",0);
-                String data = shareData.getString("item",null);
-                ToastShow.showToastMsg(MainActivity.this,"欢迎："+data);
+                String nickname = shareData.getString("nickname","昵称获取失败");
+                String openid = shareData.getString("openid","账号获取失败");
+                ToastShow.showToastMsg(MainActivity.this,"欢迎："+nickname+","+openid);
                 break;
 
             default:
