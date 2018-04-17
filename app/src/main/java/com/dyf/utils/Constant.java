@@ -30,6 +30,11 @@ public class Constant
     public static String GET_All_PARKLOTINFO_METHOD_NAME = "getAllParklot";
 
     /**
+     * 向服务器发送方法名称，将QQ登录用户信息保存在数据库
+     */
+    public static String INSERT_QQUSER_INFO = "insertQQUserInfo";
+
+    /**
      * 设置地图的初始放大比例和点击我在哪按钮时的地图放大比例
      */
     public static float BASIC_ZOOM = 16;

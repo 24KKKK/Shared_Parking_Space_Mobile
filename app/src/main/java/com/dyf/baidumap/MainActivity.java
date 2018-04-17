@@ -151,6 +151,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText mEtAppid = null;
     private static Intent mPrizeIntent = null;
     private static boolean isServerSideLogin = false;
+    SharedPreferences.Editor shareData ;// 将QQ登录的相关信息缓存一下
+    private String openid;  // QQ用户识别码
 
 
     @Override
@@ -341,8 +343,19 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void doComplete(Object values) {
             SysoUtils.print("sys login doComplete:" + values.toString());
+            JSONObject val = (JSONObject)values;
+            shareData = getSharedPreferences("data",0).edit();
+            try {
+                if (val.getInt("ret")==0)
+                {
+                    openid = val.getString("openid");
+                    shareData.putString("openid",openid);
+                }
 
-            Log.d("SDKQQAgentPref", "AuthorSwitch_SDK:" + SystemClock.elapsedRealtime());
+                Log.d("SDKQQAgentPref", "AuthorSwitch_SDK:" + SystemClock.elapsedRealtime());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             initOpenidAndToken(values);
             updateUserInfo();
             //updateLoginButton();
@@ -411,16 +424,20 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         //mUserInfo.setVisibility(android.view.View.VISIBLE);
                         //mUserInfo.setText(response.getString("nickname"));
+                        SysoUtils.print("sys response:"+response.toString());
                         String nickname = response.getString("nickname");
-                        String openid = response.getString("openid");
+                        String gender = response.getString("gender");
+                        String province = response.getString("province");
+                        String city = response.getString("city");
+                        String figureurl = response.getString("figureurl");
+                        SysoUtils.print(" sys 用户基本信息："+nickname+","+gender+","+province+","+city+","+figureurl);
+
                         ToastShow.showToastMsg(MainActivity.this,"欢迎"+nickname);
                         // 将用户名称以类似session的形式保存
-                        SharedPreferences.Editor shareData = getSharedPreferences("data",0).edit();
                         shareData.putString("nickname",nickname);
-                        shareData.putString("openid",openid);
-                        SysoUtils.print(" sys "+shareData.commit());;
-
-
+                        shareData.commit();
+                        insertQQUserInfo(openid, nickname,gender,province,city,figureurl);
+                        //SysoUtils.print(" sys "+shareData.commit());
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -433,6 +450,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
     };
+
+    // QQ用户登录之后，将信息放入系统数据库
+    private void insertQQUserInfo(String openid,String nickname, String gender, String province, String city, String figureurl) {
+        SendRequest.insertQQUserInfo(openid,nickname,gender,province,city,figureurl);
+
+    }
 
 
     private class BaseUiListener implements IUiListener {
