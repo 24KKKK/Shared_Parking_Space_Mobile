@@ -65,7 +65,6 @@ import com.tencent.connect.UserInfo;
 import com.tencent.connect.common.Constants;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
-import com.tencent.open.SocialConstants;
 import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
 import com.tencent.tauth.UiError;
@@ -175,6 +174,8 @@ public class MainActivity extends AppCompatActivity {
         initMarker();
         //注册 微信
         regToWx();
+        // 检查QQ是否是登录状态
+        //isLogin();
 
         //通过长按设置终点位置
         mBaiduMap.setOnMapLongClickListener(new BaiduMap.OnMapLongClickListener() {
@@ -232,7 +233,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 ToastShow.showToastMsg(MainActivity.this, "调用QQ登录");
-
                 qqLogin();
             }
         });
@@ -310,6 +310,21 @@ public class MainActivity extends AppCompatActivity {
             initNavi();
         }
     }
+
+    // 检查QQ是否是登录状态，确定登录按钮的文字
+//    private void isLogin() {
+//        if (mTencent.isSessionValid()){
+//            mBtnLogin.setText("退出登录");
+//        }
+//        else {
+//            mBtnLogin.setText("登录");
+//        }
+//        SharedPreferences share = getSharedPreferences("data",0);
+//        openid = share.getString("openid","未登录");
+//        if (!openid.equals("未登录")){
+//            mBtnLogin.setText("重新登录");
+//        }
+//    }
 
     /**
      * 微信 注册
@@ -531,6 +546,10 @@ public class MainActivity extends AppCompatActivity {
      * 点击 登录 按钮，调用 QQ 登录,通过下面这个方法就可以弹出QQ第三方授权页面了，点击确认即可。
      */
     private void qqLogin() {
+        if ((mBtnLogin.getText().toString().equals("退出登录"))){
+            mTencent.logout(this);
+            return;
+        }
         SysoUtils.print("sys 进入QQlogin方法");
         mTencent = Tencent.createInstance(QQAPP_ID, MainActivity.this);
         SSLSocketFactory.getSocketFactory().setHostnameVerifier(new AllowAllHostnameVerifier());
@@ -539,6 +558,7 @@ public class MainActivity extends AppCompatActivity {
             mTencent.login(this, "all", loginListener);
             isServerSideLogin = false;
             Log.d("SDKQQAgentPref", "FirstLaunch_SDK:" + SystemClock.elapsedRealtime());
+
         } else {
             if (isServerSideLogin) { // Server-Side 模式的登陆, 先退出，再进行SSO登陆
                 SysoUtils.print("sys login第二个if");
@@ -992,7 +1012,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 }
                 else {
-                Intent intent = new Intent(MainActivity.this,ReCharge.class);
+                Intent intent = new Intent(MainActivity.this,ReChargeActivity.class);
                 startActivity(intent);
                 break;
                 }

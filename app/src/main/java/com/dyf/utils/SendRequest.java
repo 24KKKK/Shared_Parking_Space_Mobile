@@ -3,6 +3,8 @@ package com.dyf.utils;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.dyf.baidumap.ReChargeActivity;
+
 import org.ksoap2.SoapEnvelope;
 import org.ksoap2.serialization.SoapObject;
 import org.ksoap2.serialization.SoapSerializationEnvelope;
@@ -206,6 +208,57 @@ public class SendRequest
                 SysoUtils.print("sys soapobject balance:"+result.toString());
                 double balance = Double.parseDouble( result.getProperty("resultBalance").toString()) ;
                 return balance;
+            }
+        } catch (Exception e)
+        {
+            Log.i("调用webservice出错：",e.toString());
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // 将充值操作保存记录
+    public static double insertReChargeOption(String openid,String reChargeNum,String optionName)
+    {
+        //命名空间
+        String nameSpace = Constant.NAMESPACE;
+        //serviceURL
+        String serviceURL = Constant.SERVICEURL;
+        Log.i("serviceURL:",serviceURL);
+        //调用的方法名称
+        String methodName = Constant.INSERT_RECHARGEOPTION;
+        //创建HttpTransportSE传输对象
+        HttpTransportSE transport = new HttpTransportSE(serviceURL);
+        //transport.debug = true;
+        //使用Soap1.1创建SoapSerializationEnvelope对象
+        SoapSerializationEnvelope envelop = new SoapSerializationEnvelope(SoapEnvelope.VER11);
+        //实例化SoapObject对象
+        SoapObject request = new SoapObject(nameSpace, methodName);
+        String soapAction = nameSpace +"/"+ methodName;
+        //添加发送请求时的参数
+        request.addProperty("openid",openid);
+        request.addProperty("reChargeNum",reChargeNum);
+        request.addProperty("optionName",optionName);
+        envelop.dotNet = true;
+        envelop.bodyOut = request;
+        envelop.setOutputSoapObject(request);
+        envelop.encodingStyle = "UTF-8";
+        //调用webservice
+        try
+        {
+            transport.call(soapAction, envelop);
+            Log.i("envelop.getresponse:", envelop.getResponse().toString());
+            if (envelop.getResponse().toString() != null)
+            {
+                //接收服务器返回的list信息
+                SoapObject result = (SoapObject) envelop.bodyIn;
+                SysoUtils.print("sys soapobject balance:"+result.toString());
+                int insertResult = Integer.parseInt( result.getProperty("insertResult").toString()) ;
+                if (insertResult == 1){
+                    SysoUtils.print("sys 记录保存成功");
+                }else {
+                    SysoUtils.print("sys 记录保存失败");
+                }
             }
         } catch (Exception e)
         {

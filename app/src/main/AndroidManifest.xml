@@ -93,7 +93,7 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <!-- QQ登录配置完成 end -->
 
-        <activity android:name=".ReCharge"></activity>
+        <activity android:name=".ReChargeActivity"></activity>
     </application>
 
 </manifest>

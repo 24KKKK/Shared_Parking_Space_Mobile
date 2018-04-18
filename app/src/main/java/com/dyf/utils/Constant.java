@@ -41,6 +41,11 @@ public class Constant
     public static String GET_BALANCE = "getBalance";
 
     /**
+     * 向服务器发送的方法名称，将充值操作保存进数据库
+     */
+    public static String INSERT_RECHARGEOPTION = "insertReChargeOption";
+
+    /**
      * 设置地图的初始放大比例和点击我在哪按钮时的地图放大比例
      */
     public static float BASIC_ZOOM = 16;
