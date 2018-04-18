@@ -452,8 +452,13 @@ public class MainActivity extends AppCompatActivity {
     };
 
     // QQ用户登录之后，将信息放入系统数据库
-    private void insertQQUserInfo(String openid,String nickname, String gender, String province, String city, String figureurl) {
-        SendRequest.insertQQUserInfo(openid,nickname,gender,province,city,figureurl);
+    private void insertQQUserInfo(final String openid,final String nickname, final String gender, final String province,final  String city, final String figureurl) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                SendRequest.insertQQUserInfo(openid,nickname,gender,province,city,figureurl);
+            }
+        }).start();
 
     }
 
@@ -971,10 +976,26 @@ public class MainActivity extends AppCompatActivity {
             // 测试sharepreferences是否能用
             case R.id.id_testusername:
                 SharedPreferences shareData = getSharedPreferences("data",0);
-                String nickname = shareData.getString("nickname","昵称获取失败");
-                String openid = shareData.getString("openid","账号获取失败");
-                ToastShow.showToastMsg(MainActivity.this,"欢迎："+nickname+","+openid);
+                String testnickname = shareData.getString("nickname","昵称获取失败");
+                String testopenid = shareData.getString("openid","账号获取失败");
+                ToastShow.showToastMsg(MainActivity.this,"欢迎："+testnickname+","+testopenid);
                 break;
+
+            // 点击充值按钮，跳转充值界面
+            case R.id.id_recharge:
+                shareData = getSharedPreferences("data",0);
+
+                openid = shareData.getString("openid","账号获取失败");
+                if (openid.equals("账号获取失败")){
+                    ToastShow.showToastMsg(MainActivity.this,"请先登陆");
+                    SysoUtils.print("账号获取失败");
+                    break;
+                }
+                else {
+                Intent intent = new Intent(MainActivity.this,ReCharge.class);
+                startActivity(intent);
+                break;
+                }
 
             default:
                 break;

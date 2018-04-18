@@ -66,4 +66,9 @@
         app:showAsAction="never"
         android:title="@string/testusername"/>
 
+    <item
+        android:id="@+id/id_recharge"
+        app:showAsAction="never"
+        android:title="@string/recharge"/>
+
 </menu>

@@ -24,6 +24,7 @@ public class Convert
         NumberFormat nf = NumberFormat.getInstance();
         nf.setGroupingUsed(false);
         String dou_str = nf.format(dou_obj);
+        SysoUtils.print("转换后的double："+dou_str);
         return dou_str;
     }
 
