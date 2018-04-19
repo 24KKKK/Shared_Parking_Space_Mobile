@@ -177,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
         // 检查QQ是否是登录状态
         //isLogin();
 
+
         //通过长按设置终点位置
         mBaiduMap.setOnMapLongClickListener(new BaiduMap.OnMapLongClickListener() {
             @Override
@@ -246,10 +247,15 @@ public class MainActivity extends AppCompatActivity {
                 //ImageView iv = (ImageView) mMarkerLy.findViewById(R.id.id_info_img);
                 TextView distance = (TextView) mMarkerLy.findViewById(R.id.id_info_distance);
                 TextView name = (TextView) mMarkerLy.findViewById(R.id.id_info_name);
+                TextView time = (TextView) mMarkerLy.findViewById(R.id.id_info_time);
+                TextView noparknum = (TextView) mMarkerLy.findViewById(R.id.id_info_noparknum);
                 //TextView zan = (TextView) mMarkerLy.findViewById(R.id.id_info_zan);
                 //iv.setImageResource(info.getImgId());
-                distance.setText(String.valueOf(resultParklotInfo.getDistance()));
-                name.setText(resultParklotInfo.getParklotName());
+                distance.setText(String.valueOf("距离为："+resultParklotInfo.getDistance()+" 米"));
+                name.setText("停车场名称："+resultParklotInfo.getParklotName());
+                time.setText("大概所需时间为："+resultParklotInfo.getTime()/60+" 分钟");
+                noparknum.setText("剩余车位数为："+resultParklotInfo.getNoParkNum());
+
                 //zan.setText(0);
 
                 //点击覆盖物，显示文本信息
@@ -309,6 +315,8 @@ public class MainActivity extends AppCompatActivity {
         if (initDirs()) {
             initNavi();
         }
+
+
     }
 
     // 检查QQ是否是登录状态，确定登录按钮的文字
@@ -871,6 +879,7 @@ public class MainActivity extends AppCompatActivity {
     private void initMarker() {
         mMarker = BitmapDescriptorFactory.fromResource(R.mipmap.marker);
         mMarkerLy = (RelativeLayout) findViewById(R.id.id_marker_ly);
+
     }
 
     //初始化控件
@@ -917,6 +926,9 @@ public class MainActivity extends AppCompatActivity {
                 mCurrentX = x;
             }
         });
+
+
+
     }
 
 
@@ -1234,7 +1246,10 @@ public class MainActivity extends AppCompatActivity {
                 isFirstIn = false;
                 //定位完成后，弹出定位信息
                 Toast.makeText(context, bdLocation.getAddrStr(), Toast.LENGTH_LONG).show();
+                // 打开客户端时，应该显示覆盖物
+                addOverlays();
             }
+
         }
 
     }

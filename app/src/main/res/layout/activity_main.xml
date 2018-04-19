@@ -71,12 +71,13 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="140dp"
             android:layout_alignParentBottom="true">
             <!--
                     android:background="@mipmap/bg_map_bottom"
             -->
 
+            <!-- 点击覆盖物时，屏幕下方显示的信息-->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -97,6 +98,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="距离200米"
+                    android:textColor="#fff5eb"/>
+
+                <TextView
+                    android:id="@+id/id_info_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1分钟"
+                    android:textColor="#fff5eb"/>
+
+                <TextView
+                    android:id="@+id/id_info_noparknum"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
                     android:textColor="#fff5eb"/>
 
             </LinearLayout>
