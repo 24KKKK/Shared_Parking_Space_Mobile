@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/id_ll_nickname"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="欢迎："/>
+
+        <TextView
+            android:id="@+id/id_reserve_nickname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nickname"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/id_ll_parklotname"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/id_reserve_parklotname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/parklotname"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/id_ll_startdate"
+        android:layout_width="match_parent"
+        android:layout_height="77dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择开始时间："/>
+
+        <TextView
+            android:id="@+id/id_reserve_starttime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:text="12:23"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/id_ll_enddate"
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择结束时间："/>
+
+        <TextView
+            android:id="@+id/id_reserve_endtime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:text="12:23"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/id_ll_starttime"
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择开始日期："/>
+
+        <TextView
+            android:id="@+id/id_reserve_startdate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:text="2018-4-19"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/id_ll_endtime"
+        android:layout_width="match_parent"
+        android:layout_height="68dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择结束日期："/>
+
+        <TextView
+            android:id="@+id/id_reserve_enddate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:text="2018-4-19"/>
+
+    </LinearLayout>
+</LinearLayout>

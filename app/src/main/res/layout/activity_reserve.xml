@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/id_ll_nickname"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="欢迎："
+            android:layout_marginTop="15px"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/id_tv_nickname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nickname"
+            android:layout_marginTop="15px"
+            android:textSize="24sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/id_ll_parklotname"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/id_tv_parklotname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/parklotname"
+            android:layout_marginTop="15px"
+            android:textSize="24sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/id_ll_starttime"
+        android:layout_width="match_parent"
+        android:layout_height="77dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择开始时间："
+            android:layout_marginTop="15px"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/id_tv_starttime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="12:23"
+            android:layout_marginTop="15px"
+            android:textSize="24sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/id_ll_endtime"
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择结束时间："
+            android:layout_marginTop="15px"
+            android:textSize="24sp" />
+
+
+        <TextView
+            android:id="@+id/id_tv_endtime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="12:23"
+            android:layout_marginTop="15px"
+            android:textSize="24sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/id_ll_startdate"
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择开始日期："
+            android:layout_marginTop="15px"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/id_tv_startdate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2018-4-19"
+            android:layout_marginTop="15px"
+            android:textSize="24sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/id_ll_enddate"
+        android:layout_width="match_parent"
+        android:layout_height="68dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择结束日期："
+            android:layout_marginTop="15px"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/id_tv_enddate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2018-4-19"
+            android:layout_marginTop="15px"
+            android:textSize="24sp" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_reserve"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="预定车位" />
+</LinearLayout>

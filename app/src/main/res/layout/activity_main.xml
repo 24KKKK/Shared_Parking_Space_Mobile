@@ -51,38 +51,60 @@
         android:id="@+id/id_marker_ly"
         android:clickable="true"
         android:layout_width="match_parent"
-        android:layout_height="220dp"
+        android:layout_height="120dp"
         android:layout_alignParentBottom="true"
         android:visibility="gone"
         android:background="#cc4e5a6b">
 
-        <!--<ImageView
-            android:id="@+id/id_info_img"
-            android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:layout_marginBottom="10dp"
-            android:layout_marginLeft="12dp"
-            android:layout_marginRight="12dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/img_border"
-            android:scaleType="fitXY"
-            android:src="@mipmap/a01"
-            />-->
-
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:layout_alignParentBottom="true">
+            android:layout_height="120dp"
+            android:layout_alignParentBottom="true"
+            android:id="@+id/relativeLayout">
             <!--
                     android:background="@mipmap/bg_map_bottom"
             -->
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="14dp"
+                android:orientation="vertical"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="停车场名称："
+                    android:textColor="#fff5eb"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="距离为: 米"
+                    android:textColor="#fff5eb"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="时间： 分钟"
+                    android:textColor="#fff5eb"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="剩余车位数："
+                    android:textColor="#fff5eb"/>
+
+            </LinearLayout>
 
             <!-- 点击覆盖物时，屏幕下方显示的信息-->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:layout_marginLeft="20dp"
+                android:layout_marginLeft="100dp"
                 android:orientation="vertical"
                 >
 
@@ -123,8 +145,14 @@
                 android:layout_centerVertical="true"
                 android:layout_marginRight="20dp"
                 android:orientation="horizontal"
-                >
+                android:id="@+id/linearLayout">
 
+                <Button
+                    android:id="@+id/id_info_reserve"
+                    android:layout_width="100dp"
+                    android:layout_height="50dp"
+                    android:text="@string/reserve"
+                    />
                 <!--<ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -140,8 +168,8 @@
                     android:textColor="#fff5eb"/>-->
 
             </LinearLayout>
-        </RelativeLayout>
 
+        </RelativeLayout>
     </RelativeLayout>
 
     <ProgressBar

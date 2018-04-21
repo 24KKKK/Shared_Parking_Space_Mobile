@@ -81,6 +81,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static com.dyf.baidumap.R.mipmap.marker;
+
 
 public class MainActivity extends AppCompatActivity {
     private MapView mMapView;
@@ -117,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
     private BitmapDescriptor mMarker;
     //覆盖物信息展示
     private RelativeLayout mMarkerLy;
+    private Button btn_reserve;
 
     //导航相关
     public static List<Activity> activityList = new LinkedList<Activity>();
@@ -246,16 +249,23 @@ public class MainActivity extends AppCompatActivity {
                 ResultParklotInfo resultParklotInfo = (ResultParklotInfo) extraInfo.getSerializable("result");
                 //ImageView iv = (ImageView) mMarkerLy.findViewById(R.id.id_info_img);
                 TextView distance = (TextView) mMarkerLy.findViewById(R.id.id_info_distance);
-                TextView name = (TextView) mMarkerLy.findViewById(R.id.id_info_name);
+                final TextView name = (TextView) mMarkerLy.findViewById(R.id.id_info_name);
                 TextView time = (TextView) mMarkerLy.findViewById(R.id.id_info_time);
                 TextView noparknum = (TextView) mMarkerLy.findViewById(R.id.id_info_noparknum);
                 //TextView zan = (TextView) mMarkerLy.findViewById(R.id.id_info_zan);
                 //iv.setImageResource(info.getImgId());
-                distance.setText(String.valueOf("距离为："+resultParklotInfo.getDistance()+" 米"));
-                name.setText("停车场名称："+resultParklotInfo.getParklotName());
-                time.setText("大概所需时间为："+resultParklotInfo.getTime()/60+" 分钟");
-                noparknum.setText("剩余车位数为："+resultParklotInfo.getNoParkNum());
+                distance.setText(String.valueOf(resultParklotInfo.getDistance()));
+                name.setText(resultParklotInfo.getParklotName());
+                time.setText(String.valueOf(resultParklotInfo.getTime()/60));
+                noparknum.setText(String.valueOf(resultParklotInfo.getNoParkNum()));
 
+                btn_reserve.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        String parklotName = name.getText().toString();
+                        reservePark(parklotName);
+                    }
+                });
                 //zan.setText(0);
 
                 //点击覆盖物，显示文本信息
@@ -316,23 +326,42 @@ public class MainActivity extends AppCompatActivity {
             initNavi();
         }
 
+        // 预定车位
+        btn_reserve.setOnClickListener(new btnReserveClickListener());
+
 
     }
 
-    // 检查QQ是否是登录状态，确定登录按钮的文字
-//    private void isLogin() {
-//        if (mTencent.isSessionValid()){
-//            mBtnLogin.setText("退出登录");
-//        }
-//        else {
-//            mBtnLogin.setText("登录");
-//        }
-//        SharedPreferences share = getSharedPreferences("data",0);
-//        openid = share.getString("openid","未登录");
-//        if (!openid.equals("未登录")){
-//            mBtnLogin.setText("重新登录");
-//        }
-//    }
+    // 预定停车位
+    private void reservePark(String parklotName) {
+        SysoUtils.print("sys 停车场名称为："+parklotName);
+
+        SharedPreferences shareData = getSharedPreferences("data",0);
+        String nickname = shareData.getString("nickname","未登录");
+        if (nickname.equals("未登录")) {
+            ToastShow.showToastMsg(MainActivity.this,"请先登录");
+            return;
+        }
+        // 查找数据库中是否已经有车牌号，显示在界面中
+        getPlateNum();
+
+        Intent intent = new Intent(MainActivity.this,ReserveActivity.class);
+        intent.putExtra("parklotName",parklotName);
+        startActivity(intent);
+    }
+
+    // 查找数据库中是否已经有车牌号，显示在界面中
+    private void getPlateNum() {
+        new Thread(){
+            @Override
+            public void run() {
+                Message msg = new Message();
+                msg.what = 3;
+                msg.obj = SendRequest.selectPlateNum(openid);
+                mHandler.sendMessage(msg);
+            }
+        }.start();
+    }
 
     /**
      * 微信 注册
@@ -469,6 +498,13 @@ public class MainActivity extends AppCompatActivity {
                 Bitmap bitmap = (Bitmap)msg.obj;
                 //mUserLogo.setImageBitmap(bitmap);
                 //mUserLogo.setVisibility(android.view.View.VISIBLE);
+            }
+            else if (msg.what == 3) {
+                String plateNum = msg.obj.toString();
+                if(plateNum.equals("")||plateNum.equals(null)){
+                    ToastShow.showToastMsg(MainActivity.this,"请先绑定车牌号");
+                    return;
+                }
             }
         }
 
@@ -877,7 +913,7 @@ public class MainActivity extends AppCompatActivity {
 
     //初始化覆盖物图标
     private void initMarker() {
-        mMarker = BitmapDescriptorFactory.fromResource(R.mipmap.marker);
+        mMarker = BitmapDescriptorFactory.fromResource(marker);
         mMarkerLy = (RelativeLayout) findViewById(R.id.id_marker_ly);
 
     }
@@ -896,6 +932,8 @@ public class MainActivity extends AppCompatActivity {
         //设置地图初始放大比例
         MapStatusUpdate msu = MapStatusUpdateFactory.zoomTo(Constant.BASIC_ZOOM);
         mBaiduMap.setMapStatus(msu);
+        // 预定车位按钮
+        btn_reserve = (Button) findViewById(R.id.id_info_reserve);
     }
 
     //初始化定位
@@ -1028,6 +1066,11 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
                 break;
                 }
+                // 绑定车牌号
+            case R.id.id_bindplatenum:
+                Intent intent = new Intent(MainActivity.this,BindPlateNumActivity.class);
+                    startActivity(intent);
+                break;
 
             default:
                 break;
@@ -1292,5 +1335,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         mMapView.onDestroy();
+    }
+
+    // 预定车位按钮点击
+    private class btnReserveClickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+
+        }
     }
 }

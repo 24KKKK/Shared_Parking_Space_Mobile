@@ -71,4 +71,9 @@
         app:showAsAction="never"
         android:title="@string/recharge"/>
 
+    <item
+        android:id="@+id/id_bindplatenum"
+        app:showAsAction="never"
+        android:title="@string/bindplatenum"/>
+
 </menu>
