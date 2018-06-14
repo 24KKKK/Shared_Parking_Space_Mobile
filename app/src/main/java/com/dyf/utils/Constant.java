@@ -16,13 +16,18 @@ public class Constant
      * 请求的serviceURL
      */
     //二教的无线IP地址
-    //public static String SERVICEURL = "http://192.168.43.195:8080/parkservice";
+    //public static String SERVICEURL = "http://192.168.43.195:8081/parkservice";
     //毕设室无线IP地址，两个
-    //public static String SERVICEURL = "http://10.201.128.111:8080/parkservice";
-    //public static String SERVICEURL = "http://10.201.23.19:8080/parkservice";
+    //public static String SERVICEURL = "http://10.201.128.111:8081/parkservice";
+    //public static String SERVICEURL = "http://10.201.23.19:8081/parkservice";
     //public static String SERVICEURL = "http://"+Inet.getIP()+"/parkservice";
-    public static String SERVICEURL = "http://192.168.191.1:8080/parkservice";
-    //public static String SERVICEURL = "http://119.28.138.30:8080/parkservice";
+    //public static String SERVICEURL = "http://192.168.191.1:8081/parkservice";
+    //public static String SERVICEURL = "http://119.28.138.30:8081/parkservice";
+    //public static String SERVICEURL = "http://192.168.1.5:8081/parkservice";
+    public static String SERVICEURL = "http://192.168.206.132:8081/parkservice";
+    //public static String SERVICEURL = "http://192.168.23.1:8081/parkservice";
+    // 腾讯云服务器地址
+    //public static String SERVICEURL = "http://119.28.138.30:8081/parkservice";
     /**
      * 向服务器发送的方法名称，根据条件获取合适的停车场信息
      */
@@ -57,6 +62,11 @@ public class Constant
      * 向服务器发送的方法名称，将绑定的车牌号信息保存进数据库
      */
     public static final String UPDATE_PLATENUM = "updatePlateNum";
+
+    /**
+     * 向服务器发送的方法名称，将评价内容保存进数据库
+     */
+    public static final String INSERT_EVALUATE = "insertEvaluate";
 
     /**
      * 向服务器发送的方法名称，查询数据库中是否有指定的车牌号

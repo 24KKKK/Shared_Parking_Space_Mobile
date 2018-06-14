@@ -29,16 +29,19 @@
     <item
         android:id="@+id/id_map_mode_common"
         app:showAsAction="never"
+        android:visible="false"
         android:title="@string/mode_common"/>
 
     <item
         android:id="@+id/id_map_mode_following"
         app:showAsAction="never"
+        android:visible="false"
         android:title="@string/mode_following"/>
 
     <item
         android:id="@+id/id_map_mode_compass"
         app:showAsAction="never"
+        android:visible="false"
         android:title="@string/mode_compass"/>
 
     <item
@@ -75,5 +78,10 @@
         android:id="@+id/id_bindplatenum"
         app:showAsAction="never"
         android:title="@string/bindplatenum"/>
+
+    <item
+        android:id="@+id/id_evaluate"
+        app:showAsAction="never"
+        android:title="@string/evaluate"/>
 
 </menu>

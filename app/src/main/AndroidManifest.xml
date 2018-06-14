@@ -96,7 +96,8 @@
         <activity android:name=".ReChargeActivity" />
         <activity android:name=".ReserveActivity" />
         <activity android:name=".BindPlateNumActivity" />
-        <activity android:name=".ShowPlateNumActivity"></activity>
+        <activity android:name=".ShowPlateNumActivity" />
+        <activity android:name=".EvaluateActivity"></activity>
     </application>
 
 </manifest>

@@ -1068,8 +1068,14 @@ public class MainActivity extends AppCompatActivity {
                 }
                 // 绑定车牌号
             case R.id.id_bindplatenum:
-                Intent intent = new Intent(MainActivity.this,BindPlateNumActivity.class);
-                    startActivity(intent);
+                Intent bindplatenumIntent = new Intent(MainActivity.this,BindPlateNumActivity.class);
+                    startActivity(bindplatenumIntent);
+                break;
+
+            // 评价
+            case R.id.id_evaluate:
+                Intent evaluateIntent = new Intent(MainActivity.this,EvaluateActivity.class);
+                startActivity(evaluateIntent);
                 break;
 
             default:

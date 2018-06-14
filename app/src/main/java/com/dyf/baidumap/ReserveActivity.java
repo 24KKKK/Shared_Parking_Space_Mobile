@@ -113,10 +113,16 @@ public class ReserveActivity extends AppCompatActivity implements View.OnClickLi
                         alertDialog.setTitle("提示");
                         alertDialog.setMessage("预定成功");
                         alertDialog.show();
+//                        Intent intent = new Intent(ReserveActivity.this,MainActivity.class);
+//                        startActivity(intent);
+                    }else {
+                        AlertDialog.Builder alertDialog = new AlertDialog.Builder(ReserveActivity.this);
+                        alertDialog.setTitle("提示");
+                        alertDialog.setMessage("预定失败");
+                        alertDialog.show();
                     }
                     break;
             }
-
         }
     };
 
@@ -209,7 +215,6 @@ public class ReserveActivity extends AppCompatActivity implements View.OnClickLi
         nickname = shareData.getString("nickname", "未登录");
         openid = shareData.getString("openid","未登录");
         tv_username.setText(nickname);
-
     }
 
     // 获取从上一个页面传过来的数据

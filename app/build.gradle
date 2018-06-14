@@ -19,6 +19,14 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.config
+        splits {
+            abi {
+                enable true
+                reset()
+                include 'x86', 'armeabi-v7a','x86_64'
+                universalApk true
+            }
+        }
     }
     buildTypes {
         release {
@@ -49,7 +57,7 @@ dependencies {
     compile files('libs/ksoap2-android-assembly-2.4-jar-with-dependencies.jar')
     compile files('libs/libammsdk.jar')
     compile files('libs/open_sdk_r5990_lite.jar')
-    compile files('libs/android-support-v4.jar')
+    //compile files('libs/android-support-v4.jar')
     compile files('libs/alipaySdk-20180403.jar')
     compile 'com.tencent.mm.opensdk:wechat-sdk-android-with-mta:+'
     compile 'com.android.support:appcompat-v7:24.2.1'
